@@ -1,0 +1,340 @@
+
+.container1 {
+    min-height: 100vh;
+    position: relative;
+    background-image: url('https://sanodyna.com.vn/wp-content/uploads/2020/12/0QDG8alS9V.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+}
+
+.container1::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+
+.card {
+    width: 100%;
+    max-width: 600px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+}
+
+
+.header12 {
+    background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+    padding: 24px;
+    text-align: center;
+}
+
+.header12 h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.header12 p {
+    color: #e0e7ff;
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 600;
+}
+
+
+.form-container {
+    padding: 32px 24px;
+}
+
+
+.success-message {
+    margin-bottom: 24px;
+    padding: 12px;
+    background-color: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #047857;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.success-message span {
+    margin-left: 8px;
+}
+
+.form-container .space-y-5 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.input-group {
+    margin-bottom: 0;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 6px;
+}
+
+.input-group label span {
+    color: #ef4444;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-field:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.input-field.error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.input-field.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-field::placeholder {
+    color: #9ca3af;
+}
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.password-field {
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.password-field:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.password-field.error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.password-field.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.password-field::placeholder {
+    color: #9ca3af;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #4b5563;
+}
+
+.error-message {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+}
+
+.error-message svg {
+    margin-right: 4px;
+}
+
+.pt-2 {
+    display: flex;
+    justify-content: center;
+    grid-column: span 2;
+}
+
+.submit-button {
+    width: fit-content;
+    background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.submit-button:hover {
+    background: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%);
+    transform: translateY(-2px);
+}
+
+.divider {
+    position: relative;
+    margin: 24px 0;
+    text-align: center;
+    grid-column: span 2;
+}
+
+.divider-line {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    border-top: 1px solid #e5e7eb;
+}
+
+.divider-text {
+    position: relative;
+    display: inline-block;
+    background: white;
+    padding: 0 12px;
+}
+
+.divider-text span {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Social buttons */
+.social-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    grid-column: span 2;
+}
+
+.social-button {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.social-button:hover {
+    background: #f9fafb;
+    transform: translateY(-1px);
+}
+
+.social-button svg {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+}
+
+.login-link {
+    text-align: center;
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 24px;
+    grid-column: span 2;
+}
+
+.login-link span {
+    color: #4f46e5;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.login-link span:hover {
+    color: #4338ca;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .card {
+        max-width: 100%;
+        margin: 0 16px;
+    }
+
+    .form-container {
+        padding: 24px 16px;
+    }
+
+    .form-container .space-y-5 {
+        grid-template-columns: 1fr;
+    }
+
+    .pt-2, .divider, .social-buttons, .login-link {
+        grid-column: span 1;
+    }
+
+    .social-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .input-field, .password-field {
+        max-width: 100%;
+    }
+}
