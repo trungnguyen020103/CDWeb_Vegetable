@@ -1,8 +1,12 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.EmailVerifycationDto;
 import com.example.demo.dto.UserSignUpDto;
 import com.example.demo.model.AuthResponse;
 import com.example.demo.model.User;
+import com.example.demo.sendmail.EmailDetails;
+import com.example.demo.sendmail.EmailService;
+import com.example.demo.service.EmailVerifycationService;
 import com.example.demo.untils.JwtUntils;
 import com.example.demo.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +22,11 @@ import org.slf4j.LoggerFactory;
 @RequestMapping("/auth")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
+    @Autowired private EmailService emailService;
     @Autowired
     private AuthenticationManager authenticationManager;
-
+@Autowired
+    EmailVerifycationService emailVerifycationService;
     @Autowired
     private JwtUntils jwtUntils;
 
@@ -56,6 +61,7 @@ public class AuthController {
             return ResponseEntity.status(403).body("Login failed: " + e.getMessage());
         }
     }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserSignUpDto userDto) {
         try {
@@ -91,6 +97,24 @@ public class AuthController {
             }
         }
         return ResponseEntity.badRequest().body("Invalid refresh token");
+    }
+    @PostMapping("/changepasswithcode")
+    public ResponseEntity<?> changePasswordWithCode(@RequestBody EmailVerifycationDto dto) {
+        boolean result = emailVerifycationService.changePasswordWithCode(dto);
+
+        if (result) {
+            return ResponseEntity.ok("Đổi mật khẩu thành công.");
+        } else {
+            return ResponseEntity.badRequest().body("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+        }
+    }
+// send tới mail 1 mã code
+    @PostMapping("/sendmail")
+    public String sendMail(@RequestBody EmailDetails details)
+    {
+        String status
+                = emailService.sendSimpleMail(details);
+        return status;
     }
 
     static class AuthRequest {

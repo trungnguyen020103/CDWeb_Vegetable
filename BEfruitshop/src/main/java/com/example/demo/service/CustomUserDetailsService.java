@@ -21,6 +21,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    public User getUserById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+    }
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
