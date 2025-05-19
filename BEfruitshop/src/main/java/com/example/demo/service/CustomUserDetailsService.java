@@ -3,7 +3,6 @@ package com.example.demo.service;
 import com.example.demo.dto.UserSignUpDto;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
-import com.google.common.base.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -25,7 +25,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
     }
-
+    public Long getUserIdByEmail(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            return (long) userOptional.get().getId();
+        }
+        return null;
+    }
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -66,4 +72,5 @@ public class CustomUserDetailsService implements UserDetailsService {
                 authorities
         );
     }
+
 }

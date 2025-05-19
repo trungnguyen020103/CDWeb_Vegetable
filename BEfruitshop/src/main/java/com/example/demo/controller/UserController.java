@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/user")
 //@RequestMapping()
 public class UserController {
     @Autowired
@@ -23,8 +23,8 @@ public class UserController {
         List<User> list  = customUserDetailsService.getAllUsers();
         return ResponseEntity.ok(list);
     }
-    @GetMapping("/getById")
-    public ResponseEntity<?> getById(@RequestParam Long id) {
+    @GetMapping("/getbyid/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id) {
         try {
             User user = customUserDetailsService.getUserById(id);
             return ResponseEntity.ok(user);
