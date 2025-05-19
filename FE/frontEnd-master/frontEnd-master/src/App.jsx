@@ -6,7 +6,7 @@ import Footer from './components/Footer/Footer';
 import Header from './components/Header/Header';
 // import AboutUs from './components/AboutUs/AboutUs';
 import Home from './components/Home/Home';
-import Product from './components/Product/Product';
+import ProductList from './components/Product/ProductList';
 // import ProductDetail from './components/ProductDetail/ProductDetail';
 // import ShoppingCart from './components/ShoppingCart/ShoppingCart';
 // import Contact from './components/Contact/Contact';
@@ -19,6 +19,7 @@ import Login from './components/Login/Login';
 
 
 const Layout = () => {
+    console.log('Rendering Layout');
     return (
         <div>
             <Header />
@@ -26,7 +27,7 @@ const Layout = () => {
             <Footer />
         </div>
     );
-}
+};
 
 const router = createBrowserRouter([
     {
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: <Home /> },
             { path: 'home', element: <Home /> },
+            { path: 'product', element: <ProductList /> },
             // { path: 'aboutus', element: <AboutUs /> },
             // { path: 'product', element: <Product /> },
             // { path: 'product/:id', element: <ProductDetail /> },
