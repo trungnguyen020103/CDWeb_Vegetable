@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import axios from 'axios';
 import { debounce } from 'lodash';
 import './ProductList.css';
@@ -39,7 +40,7 @@ const ProductList = () => {
                 size: productsPerPage,
                 search: searchQuery.trim() || null,
                 category: selectedCategory || null,
-                sort: sortOption || null
+                sort: sortOption || null,
             };
             console.log('Fetching products with params:', params);
             const response = await axios.get('http://localhost:8080/api/products', { params });
@@ -72,7 +73,7 @@ const ProductList = () => {
         }
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
-            currency: 'VND'
+            currency: 'VND',
         }).format(Number(price));
     };
 
@@ -145,7 +146,7 @@ const ProductList = () => {
             <div className="filter-controls">
                 <select onChange={handleCategoryChange} value={selectedCategory} aria-label="Chọn danh mục">
                     <option value="">Tất cả danh mục</option>
-                    {categories.map(category => {
+                    {categories.map((category) => {
                         if (!category || typeof category !== 'object' || !category.id || !category.name) {
                             console.error('Invalid category:', category);
                             return null;
@@ -176,7 +177,7 @@ const ProductList = () => {
 
             <div className="product-grid">
                 {console.log('Rendering products:', products)}
-                {products.map(product => {
+                {products.map((product) => {
                     if (!product || typeof product !== 'object' || !product.id || !product.name || !product.price) {
                         console.error('Invalid product:', product);
                         return null;
@@ -208,7 +209,11 @@ const ProductList = () => {
                             >
                                 <span className="heart-icon">❤️</span>
                             </button>
-                            <h3 className="product-name">{product.name}</h3>
+                            <h3 className="product-name">
+                                <Link to={`/product/${product.id}`} className="product-link">
+                                    {product.name}
+                                </Link>
+                            </h3>
                             <p className="product-price">{formatPrice(product.price)}</p>
                         </div>
                     );

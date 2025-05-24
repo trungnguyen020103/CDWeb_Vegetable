@@ -7,7 +7,7 @@ import Header from './components/Header/Header';
 // import AboutUs from './components/AboutUs/AboutUs';
 import Home from './components/Home/Home';
 import ProductList from './components/Product/ProductList';
-// import ProductDetail from './components/ProductDetail/ProductDetail';
+import ProductDetail from './components/ProductDetail/ProductDetail';
 // import ShoppingCart from './components/ShoppingCart/ShoppingCart';
 // import Contact from './components/Contact/Contact';
 import Register from './components/Register/Register';
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
             { path: 'product', element: <ProductList /> },
             // { path: 'aboutus', element: <AboutUs /> },
             // { path: 'product', element: <Product /> },
-            // { path: 'product/:id', element: <ProductDetail /> },
+            { path: 'product/:id', element: <ProductDetail /> },
             // { path: 'product/1', element: <ProductDetail /> },
 
             // { path: 'shoppingCart', element: <ShoppingCart /> },
