@@ -13,5 +13,6 @@ public interface EmailVerifycationRepository extends JpaRepository<EmailVerifyca
 
     void deleteByTimeExpireBefore(LocalDateTime now);
 
-    EmailVerifycation findByEmail(String email);
+    List<EmailVerifycation> findAllByEmail(String email);
+
 }

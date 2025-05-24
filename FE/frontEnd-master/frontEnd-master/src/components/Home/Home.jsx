@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Slider from 'react-slick';
-import { products } from '../../data/ProductDataFE'; // Adjust the path as necessary
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import './Home.css'; // Ensure you have a CSS file for additional styles
+import './Home.css';
 
 const Home = () => {
+	const [newProducts, setNewProducts] = useState([]);
+	const [banchayproducts, setBanchayproducts] = useState([]);
+	const [favoriteProducts, setFavoriteProducts] = useState([]);
+	const [loading, setLoading] = useState({ bestSellers: true, newProducts: true, favorites: true });
+	const [error, setError] = useState({ bestSellers: null, newProducts: null, favorites: null });
+
 	const slideImages = [
 		'assets/images/background_vegeta1.jpg',
 		'assets/images/background_vegeta2.jpg',
@@ -14,7 +19,26 @@ const Home = () => {
 
 	const navigate = useNavigate();
 
+	useEffect(() => {
+		const fetchProducts = async (categoryId, setProducts, section) => {
+			try {
+				const response = await fetch(`http://localhost:8080/api/products/category/${categoryId}`);
+				if (!response.ok) {
+					throw new Error(`Failed to fetch products for category ${categoryId}`);
+				}
+				const data = await response.json();
+				setProducts(data);
+				setLoading((prev) => ({ ...prev, [section]: false }));
+			} catch (err) {
+				setError((prev) => ({ ...prev, [section]: err.message }));
+				setLoading((prev) => ({ ...prev, [section]: false }));
+			}
+		};
 
+		fetchProducts(1, setBanchayproducts, 'bestSellers');
+		fetchProducts(2, setNewProducts, 'newProducts');
+		fetchProducts(3, setFavoriteProducts, 'favorites');
+	}, []);
 
 	const settings = {
 		dots: true,
@@ -22,9 +46,9 @@ const Home = () => {
 		speed: 500,
 		slidesToShow: 4,
 		slidesToScroll: 1,
-		draggable: true, // Enable dragging with the mouse
-		autoplay: true, // Enable autoplay
-		autoplaySpeed: 2000, // Autoplay speed in milliseconds
+		draggable: true,
+		autoplay: true,
+		autoplaySpeed: 2000,
 		responsive: [
 			{
 				breakpoint: 1024,
@@ -33,22 +57,22 @@ const Home = () => {
 					slidesToScroll: 1,
 					infinite: true,
 					dots: true,
-					autoplay: true, // Ensure autoplay is enabled on all breakpoints
+					autoplay: true,
 					autoplaySpeed: 3000,
-				}
+				},
 			},
 			{
 				breakpoint: 600,
 				settings: {
 					slidesToShow: 1,
 					slidesToScroll: 1,
-					autoplay: true, // Ensure autoplay is enabled on all breakpoints
+					autoplay: true,
 					autoplaySpeed: 3000,
-				}
-			}
+				},
+			},
 		],
 		nextArrow: <SampleNextArrow />,
-		prevArrow: <SamplePrevArrow />
+		prevArrow: <SamplePrevArrow />,
 	};
 
 	function SampleNextArrow(props) {
@@ -56,7 +80,7 @@ const Home = () => {
 		return (
 			<div
 				className={className}
-				style={{ ...style, display: "block", right: "-25px" }}
+				style={{ ...style, display: 'block', right: '-25px' }}
 				onClick={onClick}
 			/>
 		);
@@ -67,7 +91,7 @@ const Home = () => {
 		return (
 			<div
 				className={className}
-				style={{ ...style, display: "block", left: "-25px", zIndex: 1 }}
+				style={{ ...style, display: 'block', left: '-25px', zIndex: 1 }}
 				onClick={onClick}
 			/>
 		);
@@ -75,8 +99,7 @@ const Home = () => {
 
 	const handleShopNowClick = (id) => {
 		window.scrollTo(0, 0);
-		// navigate(`/product/${id}`);
-		navigate(`/product/1`);
+		navigate(`/product/${id}`);
 	};
 
 	return (
@@ -107,115 +130,112 @@ const Home = () => {
 				</div>
 			</section>
 
+			{/* Bán Chạy Nhất (Category ID 1) */}
 			<section className="bg0 p-t-23 p-b-140">
 				<div className="container">
 					<div className="p-b-10">
-						<h3 className="ltext-103 cl5">BÁN CHẠY NHẤT
-						</h3>
+						<h3 className="ltext-103 cl5">BÁN CHẠY NHẤT</h3>
 					</div>
-					<Slider {...settings}>
-						{Array.from({ length: 8 }).map((_, index) => (
-							<div key={index} className="wrap-pic-w product-item">
-								<div className="block1">
-									<img src="assets/images/product-temp1.jpg" alt={`Sản phẩm ${index + 1}`} />
-									<button
-										onClick={() => handleShopNowClick(index)}
-										className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
-									>
-										<div className="block1-txt-child1 flex-col-l">
-											<span className="block1-info stext-102 trans-04">Sản phẩm bán chạy</span>
-										</div>
-										<div className="block1-txt-child2 p-b-4 trans-05">
-											<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>
-										</div>
-									</button>
+					{loading.bestSellers ? (
+						<p>Loading best sellers...</p>
+					) : error.bestSellers ? (
+						<p>Error: {error.bestSellers}</p>
+					) : (
+						<Slider {...settings}>
+							{banchayproducts.map((product) => (
+								<div key={product.id} className="wrap-pic-w product-item">
+									<div className="block1">
+										<img src={product.imageUrl} alt={product.name} />
+										<button
+											onClick={() => handleShopNowClick(product.id)}
+											className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
+										>
+											<div className="block1-txt-child1 flex-col-l">
+												<span className="block1-info stext-102 trans-04">{product.name}</span>
+											</div>
+											<div className="block1-txt-child2 p-b-4 trans-05">
+												<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>
+											</div>
+										</button>
+									</div>
 								</div>
-							</div>
-						))}
-					</Slider>
-
+							))}
+						</Slider>
+					)}
 				</div>
 			</section>
 
+			{/* Sản Phẩm Mới (Category ID 2) */}
 			<section className="bg0 p-t-23 p-b-140">
 				<div className="container">
 					<div className="p-b-10">
-						<h3 className="ltext-103 cl5">Sản phẩm mới</h3>
+						<h3 className="ltext-103 cl5">SẢN PHẨM MỚI</h3>
 					</div>
-					<Slider {...settings}>
-						{Array.from({ length: 6 }).map((_, index) => (
-							<div key={index} className="wrap-pic-w product-item">
-								<div className="block1">
-									<img src="assets/images/product-temp1.jpg" alt={`Hàng mới về ${index + 1}`} />
-									<button
-										onClick={() => handleShopNowClick(index)}
-										className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
-									>
-										<div className="block1-txt-child1 flex-col-l">
-											<span className="block1-info stext-102 trans-04">Hàng mới về</span>
-										</div>
-										<div className="block1-txt-child2 p-b-4 trans-05">
-											<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>
-										</div>
-									</button>
+					{loading.newProducts ? (
+						<p>Loading new products...</p>
+					) : error.newProducts ? (
+						<p>Error: {error.newProducts}</p>
+					) : (
+						<Slider {...settings}>
+							{newProducts.map((product) => (
+								<div key={product.id} className="wrap-pic-w product-item">
+									<div className="block1">
+										<img src={product.imageUrl} alt={product.name} />
+										<button
+											onClick={() => handleShopNowClick(product.id)}
+											className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
+										>
+											<div className="block1-txt-child1 flex-col-l">
+												<span className="block1-info stext-102 trans-04">{product.name}</span>
+											</div>
+											<div className="block1-txt-child2 p-b-4 trans-05">
+												<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>
+											</div>
+										</button>
+									</div>
 								</div>
-							</div>
-						))}
-					</Slider>
-
-					{/*<Slider {...settings}>*/}
-						{/*{newProducts.map((product) => (*/}
-						{/*	<div key={product.id} className="wrap-pic-w product-item">*/}
-						{/*		<div className="block1">*/}
-						{/*			<img src={'assets/images/product-temp1.jpg'} alt={product.name} />*/}
-						{/*			<button*/}
-						{/*				onClick={() => handleShopNowClick(product.id)}*/}
-						{/*				className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"*/}
-						{/*			>*/}
-						{/*				<div className="block1-txt-child1 flex-col-l">*/}
-						{/*					<span className="block1-info stext-102 trans-04">Hàng mới về</span>*/}
-						{/*				</div>*/}
-						{/*				<div className="block1-txt-child2 p-b-4 trans-05">*/}
-						{/*					<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>*/}
-						{/*				</div>*/}
-						{/*			</button>*/}
-						{/*		</div>*/}
-						{/*	</div>*/}
-						{/*))}*/}
-					{/*</Slider>*/}
+							))}
+						</Slider>
+					)}
 				</div>
 			</section>
 
+			{/* Sản Phẩm Yêu Thích (Category ID 3) */}
 			<section className="bg0 p-t-23 p-b-140">
 				<div className="container">
 					<div className="p-b-10">
-						<h3 className="ltext-103 cl5">SẢN PHẨM YÊU THÍCH
-						</h3>
+						<h3 className="ltext-103 cl5">SẢN PHẨM YÊU THÍCH</h3>
 					</div>
-					<Slider {...settings}>
-						{Array.from({ length: 6 }).map((_, index) => (
-							<div key={index} className="wrap-pic-w product-item">
-								<div className="block1">
-									<img src="assets/images/product-temp1.jpg" alt={`Top Favorite ${index + 1}`} />
-									<button
-										onClick={() => handleShopNowClick(index)}
-										className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
-									>
-										<div className="block1-txt-child1 flex-col-l">
-											<span className="block1-info stext-102 trans-04">Top Favorite</span>
-										</div>
-										<div className="block1-txt-child2 p-b-4 trans-05">
-											<div className="block1-link stext-101 cl0 trans-09">Shop Now</div>
-										</div>
-									</button>
+					{loading.favorites ? (
+						<p>Loading favorite products...</p>
+					) : error.favorites ? (
+						<p>Error: {error.favorites}</p>
+					) : (
+						<Slider {...settings}>
+							{favoriteProducts.map((product) => (
+								<div key={product.id} className="wrap-pic-w product-item">
+									<div className="block1">
+										<img src={product.imageUrl} alt={product.name} />
+										<button
+											onClick={() => handleShopNowClick(product.id)}
+											className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
+										>
+											<div className="block1-txt-child1 flex-col-l">
+												<span className="block1-info stext-102 trans-04">{product.name}</span>
+											</div>
+											<div className="block1-txt-child2 p-b-4 trans-05">
+												<div className="block1-link stext-101 cl0 trans-09">Shop Now</div>
+											</div>
+										</button>
+									</div>
 								</div>
-							</div>
-						))}
-					</Slider>
-
+							))}
+						</Slider>
+					)}
 				</div>
 			</section>
 		</div>
 	);
 };
+
 export default Home;

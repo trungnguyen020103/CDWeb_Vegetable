@@ -1,5 +1,9 @@
 package com.example.demo.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @AllArgsConstructor
@@ -7,9 +11,19 @@ import lombok.*;
 @Data
 @Getter@Setter
 public class UserSignUpDto {
+    @NotBlank(message = "{email.notblank}")
+    @Email(message = "{email.invalid}")
     private String email;
+
+    @NotBlank(message = "{password.notblank}")
+    @Pattern(
+            regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]).+$",
+            message = "{password.invalid.format}"
+    )
     private String password;
+    @NotBlank(message = "{fullname.notblank}")
     private String fullname;
+
     private String address;
     private String phonenumber;
     public String getEmail() {

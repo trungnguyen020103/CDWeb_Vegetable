@@ -1,41 +1,56 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ChangePassDto;
 import com.example.demo.dto.EmailVerifycationDto;
 import com.example.demo.dto.UserSignUpDto;
 import com.example.demo.google.GoogleLoginRequest;
+import com.example.demo.google.GoogleSignUpDto;
 import com.example.demo.google.GoogleTokenVerifier;
+import com.example.demo.google.GoogleUserInfo;
 import com.example.demo.model.AuthResponse;
 import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.sendmail.EmailDetails;
 import com.example.demo.sendmail.EmailService;
 import com.example.demo.service.EmailVerifycationService;
 import com.example.demo.untils.JwtUntils;
 import com.example.demo.service.CustomUserDetailsService;
+import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    @Autowired private EmailService emailService;
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private AuthenticationManager authenticationManager;
-@Autowired
+    @Autowired
     EmailVerifycationService emailVerifycationService;
     @Autowired
     private JwtUntils jwtUntils;
     @Autowired
     private GoogleTokenVerifier googleTokenVerifier;
-
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private CustomUserDetailsService customerDetailService;
+
     @PostMapping("/login/google")
     public ResponseEntity<?> loginWithGoogle(@RequestBody GoogleLoginRequest googleLoginRequest) {
         String googleToken = googleLoginRequest.getGoogleToken();
@@ -43,21 +58,32 @@ public class AuthController {
             logger.warn("Received null or empty Google token");
             return ResponseEntity.badRequest().body("Google token is missing");
         }
-        try {
-            String email = googleTokenVerifier.verifyTokenAndGetEmail(googleToken);
 
-            if (email == null) {
+        try {
+            GoogleUserInfo userInfo = googleTokenVerifier.verifyTokenAndGetUserInfo(googleToken);
+
+            if (userInfo == null || userInfo.getEmail() == null) {
                 return ResponseEntity.status(401).body("Invalid Google token");
             }
 
+            String email = userInfo.getEmail();
+            String name = userInfo.getName();
+
             logger.info("Google login email: {}", email);
 
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                GoogleSignUpDto googleDto = new GoogleSignUpDto(email, name);
+                user = customerDetailService.registerFromGoogle(googleDto);
+                logger.info("Tạo tài khoản mới cho người dùng Google: {}", email);
+            }
+
+            // Tạo JWT
             var userDetails = customerDetailService.loadUserByUsername(email);
             Long userId = customerDetailService.getUserIdByEmail(email);
             String token = jwtUntils.generateToken(userDetails);
             String refreshToken = jwtUntils.generateRefreshToken(userDetails);
 
-            // Tạo response DTO
             AuthResponse authResponse = new AuthResponse(
                     token,
                     refreshToken,
@@ -74,13 +100,14 @@ public class AuthController {
             return ResponseEntity.status(403).body("Google login failed: " + e.getMessage());
         }
     }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
             logger.info("Attempting login for email: {}", request.getEmail());
 
             authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
 
             UserDetails userDetails = customerDetailService.loadUserByUsername(request.getEmail());
@@ -89,10 +116,10 @@ public class AuthController {
             String refreshToken = jwtUntils.generateRefreshToken(userDetails);
 
             AuthResponse response = new AuthResponse(
-                token,           // Access token
-                refreshToken,    // Refresh token
-                jwtUntils.getExpirationTime(),  // Thời gian hết hạn
-                "Bearer" ,       // Loại token
+                    token,           // Access token
+                    refreshToken,    // Refresh token
+                    jwtUntils.getExpirationTime(),  // Thời gian hết hạn
+                    "Bearer",       // Loại token
                     idUser
             );
 
@@ -104,8 +131,30 @@ public class AuthController {
         }
     }
 
+    // send tới mail 1 mã code
+    @PostMapping("/sendmail")
+    public ResponseEntity<?> sendMail(@Valid @RequestBody EmailDetails details, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage()));
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        String status = emailService.sendSimpleMail(details);
+        return ResponseEntity.ok(status);
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserSignUpDto userDto) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserSignUpDto userDto, BindingResult result) {
+        if (result.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            result.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage())
+            );
+            return ResponseEntity.badRequest().body(errors);
+        }
+
         try {
             User registeredUser = customerDetailService.register(userDto);
             return ResponseEntity.ok(registeredUser);
@@ -115,6 +164,7 @@ public class AuthController {
                     .body("Đăng ký thất bại: " + e.getMessage());
         }
     }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String refreshToken) {
         if (refreshToken != null && refreshToken.startsWith("Bearer ")) {
@@ -126,10 +176,7 @@ public class AuthController {
                 if (jwtUntils.validateToken(refreshToken, userDetails)) {
                     String newToken = jwtUntils.generateToken(userDetails);
                     String newRefreshToken = jwtUntils.generateRefreshToken(userDetails);
-
-                    // Lấy idUser từ service (bạn phải có hàm getUserIdByEmail ở customerDetailService)
                     Long idUser = customerDetailService.getUserIdByEmail(username);
-
                     AuthResponse response = new AuthResponse(
                             newToken,
                             newRefreshToken,
@@ -146,23 +193,23 @@ public class AuthController {
     }
 
     @PostMapping("/changepasswithcode")
-    public ResponseEntity<?> changePasswordWithCode(@RequestBody EmailVerifycationDto dto) {
-        boolean result = emailVerifycationService.changePasswordWithCode(dto);
+    public ResponseEntity<?> changePasswordWithCode(@Valid @RequestBody EmailVerifycationDto dto,BindingResult result) {
+        if (result.hasErrors()){
+            HashMap<String,String> errors = new HashMap<>();
+            result.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(),error.getDefaultMessage())
+            );
+            return ResponseEntity.badRequest().body(errors);
+        }
+        boolean results = emailVerifycationService.changePasswordWithCode(dto);
 
-        if (result) {
+        if (results) {
             return ResponseEntity.ok("Đổi mật khẩu thành công.");
         } else {
             return ResponseEntity.badRequest().body("Mã xác thực không hợp lệ hoặc đã hết hạn.");
         }
     }
-// send tới mail 1 mã code
-    @PostMapping("/sendmail")
-    public String sendMail(@RequestBody EmailDetails details)
-    {
-        String status
-                = emailService.sendSimpleMail(details);
-        return status;
-    }
+
 
     static class AuthRequest {
         private String email;

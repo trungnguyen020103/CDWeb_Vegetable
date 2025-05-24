@@ -62,19 +62,19 @@ UserRepository userRepository;
         }
         return false; // Không có code nào còn hạn
     }
-@Transactional
+    @Transactional
     public boolean changePasswordWithCode(EmailVerifycationDto dto) {
-        // Tìm mã xác thực theo email
-        EmailVerifycation emailVerification = repository.findByEmail(dto.getEmail());
+        List<EmailVerifycation> verifications = repository.findAllByEmail(dto.getEmail());
 
-        // Kiểm tra mã xác thực có hợp lệ không
-        if (emailVerification == null || !emailVerification.getCode().equals(dto.getCode())) {
+        if (verifications.isEmpty()) {
             return false;
         }
 
-        // Kiểm tra thời gian hết hạn
-        if (emailVerification.getTimeExpire().isBefore(LocalDateTime.now())
-        ) {
+        Optional<EmailVerifycation> matchedCode = verifications.stream()
+                .filter(v -> v.getCode().equals(dto.getCode()) && v.getTimeExpire().isAfter(LocalDateTime.now()))
+                .findFirst();
+
+        if (matchedCode.isEmpty()) {
             return false;
         }
 
@@ -82,16 +82,15 @@ UserRepository userRepository;
         if (userOpt.isEmpty()) {
             return false;
         }
+
         User user = userOpt.get();
 
-        // Mã hóa mật khẩu mới
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         String encodedPassword = encoder.encode(dto.getNewPassword());
         user.setPassword(encodedPassword);
         userRepository.save(user);
 
-        // Xóa mã xác thực đã dùng
-        repository.delete(emailVerification);
+        repository.delete(matchedCode.get());
 
         return true;
     }

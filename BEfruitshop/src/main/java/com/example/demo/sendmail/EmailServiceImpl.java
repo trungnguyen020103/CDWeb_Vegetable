@@ -35,7 +35,7 @@ public class EmailServiceImpl implements EmailService {
             mailMessage.setFrom(sender);
             mailMessage.setTo(details.getRecipient());
             mailMessage.setText("Mã của bạn là: " + details.getMsgBody());
-            mailMessage.setSubject(details.getSubject());
+            mailMessage.setSubject("Lấy lại mật khẩu email");
             EmailVerifycation emailVerifycation = new EmailVerifycation();
             emailVerifycation.setEmail(details.getRecipient());
             emailVerifycation.setCode(details.getMsgBody());

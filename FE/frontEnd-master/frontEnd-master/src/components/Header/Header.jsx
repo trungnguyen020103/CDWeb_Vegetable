@@ -53,7 +53,8 @@ const Header = () => {
 							<a href="/home" className="flex-c-m trans-04 p-lr-25">
 								Trợ giúp và câu hỏi thường gặp
 							</a>
-							<a href={loggedIn ? `/profile/${id}` : '/login'} className="flex-c-m trans-04 p-lr-25">
+							{/*<a href={loggedIn ? `/profile/${id}` : '/login'} className="flex-c-m p-lr-10 trans-04">*/}
+							<a href={'/profile'} className="flex-c-m p-lr-10 trans-04">
 								{username ? <span>{username}</span> : <span>Tài Khoản Của Tôi</span>}
 							</a>
 							<a href="/home" className="flex-c-m trans-04 p-lr-25">
@@ -110,7 +111,8 @@ const Header = () => {
 					<li key="topbar-links">
 						<div className="right-top-bar flex-w h-full">
 							<a href="/home" className="flex-c-m p-lr-10 trans-04">Help & FAQs</a>
-							<a href={loggedIn ? `/profile/${id}` : '/login'} className="flex-c-m p-lr-10 trans-04">
+							{/*<a href={loggedIn ? `/profile/${id}` : '/login'} className="flex-c-m p-lr-10 trans-04">*/}
+							<a href={'/profile'} className="flex-c-m p-lr-10 trans-04">
 								{username ? <span>{username}</span> : <span>Tài Khoản Của Tôi</span>}
 							</a>
 							<a href="/home" className="flex-c-m p-lr-10 trans-04">EN</a>

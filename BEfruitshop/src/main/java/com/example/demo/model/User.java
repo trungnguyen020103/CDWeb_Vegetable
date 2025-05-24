@@ -1,6 +1,10 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 @Data
 @Entity
@@ -11,10 +15,18 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String password;
-
+    @NotBlank(message = "{email.notblank}")
+    @Email(message = "{email.invalid}")
     private String email;
 
+    @NotBlank(message = "{password.notblank}")
+    @Pattern(
+            regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]).+$",
+            message = "{password.invalid.format}"
+    )
+    private String password;
+
+    @NotBlank(message = "{fullname.notblank}")
     private String fullname;
 
     private String address;
@@ -22,8 +34,6 @@ public class User {
     private String phonenumber;
 
     private Integer role;
-
-
     public User() {}
 
     public User(Integer id, String password, String email, String fullname, String address, String phonenumber, Integer role) {

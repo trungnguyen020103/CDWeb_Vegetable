@@ -12,6 +12,10 @@ import ProductList from './components/Product/ProductList';
 // import Contact from './components/Contact/Contact';
 import Register from './components/Register/Register';
 import Login from './components/Login/Login';
+import Profile from "./components/Profile/Profile";
+import ChangePassword from "./components/ChangePassword/ChangePassword";
+import ForgotPassword from "./components/ForgotPassword/ForgotPassword";
+import ChangePassWithCode from "./components/ChangePassword/ChangPassWithCode";
 // import ChangePassword from './components/ChangePassword/ChangePassword';
 // import Profile from './components/Profile/Profile';
 // import SearchResults from './components/SearchResults/SearchResults';
@@ -46,8 +50,11 @@ const router = createBrowserRouter([
             // { path: 'contact', element: <Contact /> },
             { path: 'register', element: <Register /> },
             { path: 'login', element: <Login /> },
-            // { path: 'changePassword', element: <ChangePassword /> },
+            { path: 'changePassword', element: <ChangePassword /> },
+            { path: 'forgotPassword', element: <ForgotPassword /> },
+            { path: 'changewithcode', element: <ChangePassWithCode /> },,
             // { path: 'profile/:id', element: <Profile /> },
+            { path: 'profile', element: <Profile /> },
             // { path: 'search', element: <SearchResults /> },
 
             // { path: 'payment', element: <Payment/> },

@@ -1,12 +1,15 @@
 package com.example.demo.sendmail;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 public class EmailDetails {
-
+    @NotBlank(message = "{email.notblank}")
+    @Email(message = "{email.invalid}")
     private String recipient;
     private String msgBody;
     private String subject;

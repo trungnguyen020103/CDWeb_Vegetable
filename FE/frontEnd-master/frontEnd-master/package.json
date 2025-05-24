@@ -6,12 +6,14 @@
     "@babel/core": "^7.16.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@popperjs/core": "^2.11.8",
+    "@react-oauth/google": "^0.12.2",
     "@reduxjs/toolkit": "^2.2.6",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "animsition": "^4.0.2",
+    "axios": "^1.9.0",
     "babel-jest": "^27.4.2",
     "babel-loader": "^8.2.3",
     "babel-plugin-named-asset-import": "^0.3.8",
@@ -43,8 +45,8 @@
     "jest-resolve": "^27.4.2",
     "jest-watch-typeahead": "^1.0.0",
     "jquery": "^3.7.1",
+    "jwt-decode": "^4.0.0",
     "localforage": "^1.10.0",
-    "lucide-react": "^0.510.0",
     "magnific-popup": "^1.2.0",
     "match-sorter": "^6.3.4",
     "mini-css-extract-plugin": "^2.4.5",
@@ -93,7 +95,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node sc",
+    "build": "node scripts/build.js",
     "test": "node scripts/test.js"
   },
   "eslintConfig": {
@@ -114,7 +116,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000",
+  "proxy": "http://localhost:8080",
   "devDependencies": {
     "nodemon": "^3.1.4"
   },
