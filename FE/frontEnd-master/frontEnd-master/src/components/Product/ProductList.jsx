@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
-import axios from 'axios';
+import { Link } from 'react-router-dom';
+import axios from '../../api/axiosConfig';
 import { debounce } from 'lodash';
+import { useTranslation } from 'react-i18next';
 import './ProductList.css';
 
 const ProductList = () => {
+    const { t, i18n } = useTranslation();
     const [products, setProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -13,24 +15,25 @@ const ProductList = () => {
     const [sortOption, setSortOption] = useState('');
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [productsError, setProductsError] = useState(null);
+    const [categoriesError, setCategoriesError] = useState(null);
     const productsPerPage = 12;
 
     const fetchCategories = useCallback(async () => {
         try {
-            const response = await axios.get('http://localhost:8080/api/categories');
-            console.log('Raw categories response:', response.data);
+            const response = await axios.get('/api/categories', {
+                headers: { 'Accept-Language': i18n.language },
+            });
             if (Array.isArray(response.data)) {
                 setCategories(response.data);
+                setCategoriesError(null);
             } else {
-                console.error('Categories data is not an array:', response.data);
-                setError('Dữ liệu danh mục không hợp lệ.');
+                setCategoriesError(t('error_loading_categories'));
             }
         } catch (error) {
-            console.error('Error fetching categories:', error.message);
-            setError('Không thể tải danh mục.');
+            setCategoriesError(t('error_loading_categories'));
         }
-    }, []);
+    }, [t, i18n.language]);
 
     const fetchProducts = useCallback(async () => {
         setIsLoading(true);
@@ -42,39 +45,52 @@ const ProductList = () => {
                 category: selectedCategory || null,
                 sort: sortOption || null,
             };
-            console.log('Fetching products with params:', params);
-            const response = await axios.get('http://localhost:8080/api/products', { params });
-            console.log('Raw products response:', response.data);
+            const response = await axios.get('/api/products', {
+                params,
+                headers: { 'Accept-Language': i18n.language },
+            });
             if (response.data && Array.isArray(response.data.content)) {
                 setProducts(response.data.content);
                 setTotalPages(response.data.totalPages || 1);
+                setProductsError(null);
             } else {
-                console.error('Products content is not an array:', response.data);
-                setError('Dữ liệu sản phẩm không hợp lệ.');
+                setProductsError(t('error_loading_products'));
             }
         } catch (error) {
-            console.error('Error fetching products:', error.message);
-            setError('Không thể tải sản phẩm. Vui lòng thử lại.');
+            setProductsError(t('error_loading_products'));
         } finally {
             setIsLoading(false);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }, [currentPage, searchQuery, selectedCategory, sortOption]);
+    }, [currentPage, searchQuery, selectedCategory, sortOption, t, i18n.language]);
 
     useEffect(() => {
         fetchCategories();
         fetchProducts();
     }, [fetchCategories, fetchProducts]);
 
+    useEffect(() => {
+        console.log('Language changed to:', i18n.language);
+    }, [i18n.language]);
+
     const formatPrice = (price) => {
         if (typeof price !== 'number' && typeof price !== 'string') {
-            console.error('Invalid price:', price);
             return 'N/A';
         }
-        return new Intl.NumberFormat('vi-VN', {
+        let numericPrice;
+        if (typeof price === 'string') {
+            numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
+        } else {
+            numericPrice = Number(price);
+        }
+        if (isNaN(numericPrice)) {
+            return 'N/A';
+        }
+        const currency = i18n.language === 'vi' ? 'VND' : 'USD';
+        return new Intl.NumberFormat(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
             style: 'currency',
-            currency: 'VND',
-        }).format(Number(price));
+            currency: currency,
+        }).format(numericPrice);
     };
 
     const handlePageChange = (page) => {
@@ -85,17 +101,13 @@ const ProductList = () => {
 
     const handleAddToCart = (product) => {
         if (product && product.name) {
-            alert(`Đã thêm ${product.name} vào giỏ hàng!`);
-        } else {
-            console.error('Invalid product:', product);
+            alert(t('added_to_cart', { name: product.name }));
         }
     };
 
     const handleAddToWishlist = (product) => {
         if (product && product.name) {
-            alert(`Đã thêm ${product.name} vào danh sách yêu thích!`);
-        } else {
-            console.error('Invalid product:', product);
+            alert(t('added_to_wishlist', { name: product.name }));
         }
     };
 
@@ -125,87 +137,72 @@ const ProductList = () => {
                     <span className="search-icon">🔍</span>
                     <input
                         type="text"
-                        placeholder="Tìm kiếm sản phẩm (VD: Rau)..."
+                        placeholder={t('search_placeholder')}
                         value={searchQuery}
                         onChange={handleSearch}
-                        aria-label="Tìm kiếm sản phẩm"
+                        aria-label={t('search_placeholder')}
                     />
                 </div>
                 <div className="header-icons">
-                    <button className="icon-btn" aria-label="Xem giỏ hàng">
+                    <button className="icon-btn" aria-label={t('cart')}>
                         <span className="cart-icon">🛒</span>
-                        <span className="icon-label">Giỏ hàng</span>
+                        <span className="icon-label">{t('cart')}</span>
                     </button>
-                    <button className="icon-btn" aria-label="Xem danh sách yêu thích">
+                    <button className="icon-btn" aria-label={t('add_to_wishlist')}>
                         <span className="heart-icon">❤️</span>
-                        <span className="icon-label">Yêu thích</span>
+                        <span className="icon-label">{t('add_to_wishlist')}</span>
                     </button>
                 </div>
             </div>
 
             <div className="filter-controls">
-                <select onChange={handleCategoryChange} value={selectedCategory} aria-label="Chọn danh mục">
-                    <option value="">Tất cả danh mục</option>
-                    {categories.map((category) => {
-                        if (!category || typeof category !== 'object' || !category.id || !category.name) {
-                            console.error('Invalid category:', category);
-                            return null;
-                        }
-                        return (
-                            <option key={category.id} value={category.id}>
-                                {category.name}
-                            </option>
-                        );
-                    })}
+                <select onChange={handleCategoryChange} value={selectedCategory} aria-label={t('all_categories')}>
+                    <option value="">{t('all_categories')}</option>
+                    {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                            {category.name}
+                        </option>
+                    ))}
                 </select>
-                <select onChange={handleSortChange} value={sortOption} aria-label="Chọn cách sắp xếp">
-                    <option value="">Sắp xếp</option>
-                    <option value="best_selling">Bán chạy</option>
-                    <option value="price_asc">Giá: Thấp đến Cao</option>
-                    <option value="price_desc">Giá: Cao đến Thấp</option>
-                    <option value="discount">Khuyến mãi</option>
+                <select onChange={handleSortChange} value={sortOption} aria-label={t('sort_by')}>
+                    <option value="">{t('sort_by')}</option>
+                    <option value="best_selling">{t('sort_best_selling')}</option>
+                    <option value="price_asc">{t('sort_price_asc')}</option>
+                    <option value="price_desc">{t('sort_price_desc')}</option>
+                    <option value="discount">{t('sort_discount')}</option>
                 </select>
             </div>
 
-            <h1 className="product-list-title">Rau Củ Hữu Cơ</h1>
+            <h1 className="product-list-title">{t('organic_vegetables')}</h1>
 
-            {isLoading && <p className="loading-message">Đang tải sản phẩm...</p>}
-            {error && <p className="error-message">{error}</p>}
-            {!isLoading && products.length === 0 && !error && (
-                <p>Không tìm thấy sản phẩm nào phù hợp.</p>
-            )}
+            {categoriesError && <p className="error-message">{categoriesError}</p>}
+            {isLoading && <p className="loading-message">{t('loading_products')}</p>}
+            {productsError && <p className="error-message">{productsError}</p>}
+            {!isLoading && products.length === 0 && !productsError && <p>{t('no_products_found')}</p>}
 
             <div className="product-grid">
-                {console.log('Rendering products:', products)}
-                {products.map((product) => {
-                    if (!product || typeof product !== 'object' || !product.id || !product.name || !product.price) {
-                        console.error('Invalid product:', product);
-                        return null;
-                    }
-                    return (
+                {products.map((product) => (
+                    product && product.id && product.name && product.imageUrl ? (
                         <div key={product.id} className="product-card">
                             <div className="product-image-wrapper">
                                 <img
                                     src={product.imageUrl || 'https://via.placeholder.com/150'}
                                     alt={product.name}
                                     className="product-image"
-                                    onError={(e) => {
-                                        console.warn(`Failed to load image for ${product.name}: ${product.imageUrl}`);
-                                        e.target.src = 'https://via.placeholder.com/150';
-                                    }}
+                                    onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
                                 />
                                 <button
                                     onClick={() => handleAddToCart(product)}
                                     className="add-to-cart-btn"
-                                    aria-label={`Thêm ${product.name} vào giỏ hàng`}
+                                    aria-label={t('add_to_cart')}
                                 >
-                                    <span className="cart-icon">🛒</span> Thêm vào giỏ hàng
+                                    <span className="cart-icon">🛒</span> {t('add_to_cart')}
                                 </button>
                             </div>
                             <button
                                 onClick={() => handleAddToWishlist(product)}
                                 className="wishlist-btn"
-                                aria-label={`Thêm ${product.name} vào danh sách yêu thích`}
+                                aria-label={t('add_to_wishlist')}
                             >
                                 <span className="heart-icon">❤️</span>
                             </button>
@@ -216,8 +213,8 @@ const ProductList = () => {
                             </h3>
                             <p className="product-price">{formatPrice(product.price)}</p>
                         </div>
-                    );
-                })}
+                    ) : null
+                ))}
             </div>
 
             <div className="pagination">
@@ -225,16 +222,16 @@ const ProductList = () => {
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                    aria-label="Trang trước"
+                    aria-label={t('previous')}
                 >
-                    Trước
+                    {t('previous')}
                 </button>
                 {[...Array(totalPages)].map((_, index) => (
                     <button
                         key={index + 1}
                         onClick={() => handlePageChange(index + 1)}
                         className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
-                        aria-label={`Trang ${index + 1}`}
+                        aria-label={`Page ${index + 1}`}
                     >
                         {index + 1}
                     </button>
@@ -243,9 +240,9 @@ const ProductList = () => {
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                    aria-label="Trang tiếp theo"
+                    aria-label={t('next')}
                 >
-                    Tiếp
+                    {t('next')}
                 </button>
             </div>
         </div>

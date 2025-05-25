@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Slider from 'react-slick';
+import { useTranslation } from 'react-i18next';
+import axios from '../../api/axiosConfig';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './Home.css';
 
 const Home = () => {
+	const { t, i18n } = useTranslation();
 	const [newProducts, setNewProducts] = useState([]);
 	const [banchayproducts, setBanchayproducts] = useState([]);
 	const [favoriteProducts, setFavoriteProducts] = useState([]);
@@ -22,12 +25,20 @@ const Home = () => {
 	useEffect(() => {
 		const fetchProducts = async (categoryId, setProducts, section) => {
 			try {
-				const response = await fetch(`http://localhost:8080/api/products/category/${categoryId}`);
-				if (!response.ok) {
-					throw new Error(`Failed to fetch products for category ${categoryId}`);
+				const response = await axios.get(`http://localhost:8080/api/products`, {
+					params: {
+						category: categoryId,
+						page: 1,
+						size: 12,
+					},
+					headers: { 'Accept-Language': i18n.language },
+				});
+				console.log(`Data for ${section}:`, response.data);
+				if (response.data && Array.isArray(response.data.content)) {
+					setProducts(response.data.content);
+				} else {
+					throw new Error('Invalid data format from API');
 				}
-				const data = await response.json();
-				setProducts(data);
 				setLoading((prev) => ({ ...prev, [section]: false }));
 			} catch (err) {
 				setError((prev) => ({ ...prev, [section]: err.message }));
@@ -38,7 +49,7 @@ const Home = () => {
 		fetchProducts(1, setBanchayproducts, 'bestSellers');
 		fetchProducts(2, setNewProducts, 'newProducts');
 		fetchProducts(3, setFavoriteProducts, 'favorites');
-	}, []);
+	}, [i18n.language]);
 
 	const settings = {
 		dots: true,
@@ -112,14 +123,14 @@ const Home = () => {
 								<div className="container h-full">
 									<div className="flex-col-l-m h-full p-t-100 p-b-30 respon5">
 										<div className="layer-slick1 animated visible-false" data-appear="fadeInDown" data-delay="0">
-											<span className="ltext-101 cl2 respon2">Shop rau củ quả</span>
+											<span className="ltext-101 cl2 respon2">{t('shop_vegetables')}</span>
 										</div>
 										<div className="layer-slick1 animated visible-false" data-appear="fadeInUp" data-delay="800">
-											<h2 className="ltext-201 cl2 p-t-19 p-b-43 respon1">Đảm bảo chất lượng, an toàn</h2>
+											<h2 className="ltext-201 cl2 p-t-19 p-b-43 respon1">{t('quality_safety')}</h2>
 										</div>
 										<div className="layer-slick1 animated visible-false" data-appear="zoomIn" data-delay="1600">
 											<Link to="/product" className="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
-												Vào Cửa Hàng Ngay
+												{t('shop_now')}
 											</Link>
 										</div>
 									</div>
@@ -134,32 +145,38 @@ const Home = () => {
 			<section className="bg0 p-t-23 p-b-140">
 				<div className="container">
 					<div className="p-b-10">
-						<h3 className="ltext-103 cl5">BÁN CHẠY NHẤT</h3>
+						<h3 className="ltext-103 cl5">{t('best_selling')}</h3>
 					</div>
 					{loading.bestSellers ? (
-						<p>Loading best sellers...</p>
+						<p>{t('loading_best_sellers')}</p>
 					) : error.bestSellers ? (
-						<p>Error: {error.bestSellers}</p>
+						<p>{t('error')}: {error.bestSellers}</p>
 					) : (
 						<Slider {...settings}>
-							{banchayproducts.map((product) => (
-								<div key={product.id} className="wrap-pic-w product-item">
-									<div className="block1">
-										<img src={product.imageUrl} alt={product.name} />
-										<button
-											onClick={() => handleShopNowClick(product.id)}
-											className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
-										>
-											<div className="block1-txt-child1 flex-col-l">
-												<span className="block1-info stext-102 trans-04">{product.name}</span>
+							{banchayproducts && banchayproducts.length > 0 ? (
+								banchayproducts.map((product) => (
+									product && product.id && product.name && product.imageUrl ? (
+										<div key={product.id} className="wrap-pic-w product-item">
+											<div className="block1">
+												<img src={product.imageUrl} alt={product.name} />
+												<button
+													onClick={() => handleShopNowClick(product.id)}
+													className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
+												>
+													<div className="block1-txt-child1 flex-col-l">
+														<span className="block1-info stext-102 trans-04">{product.name}</span>
+													</div>
+													<div className="block1-txt-child2 p-b-4 trans-05">
+														<div className="block1-link stext-101 cl0 trans-09">{t('shop_now')}</div>
+													</div>
+												</button>
 											</div>
-											<div className="block1-txt-child2 p-b-4 trans-05">
-												<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>
-											</div>
-										</button>
-									</div>
-								</div>
-							))}
+										</div>
+									) : null
+								))
+							) : (
+								<p>{t('no_products_found')}</p>
+							)}
 						</Slider>
 					)}
 				</div>
@@ -169,32 +186,38 @@ const Home = () => {
 			<section className="bg0 p-t-23 p-b-140">
 				<div className="container">
 					<div className="p-b-10">
-						<h3 className="ltext-103 cl5">SẢN PHẨM MỚI</h3>
+						<h3 className="ltext-103 cl5">{t('new_products')}</h3>
 					</div>
 					{loading.newProducts ? (
-						<p>Loading new products...</p>
+						<p>{t('loading_new_products')}</p>
 					) : error.newProducts ? (
-						<p>Error: {error.newProducts}</p>
+						<p>{t('error')}: {error.newProducts}</p>
 					) : (
 						<Slider {...settings}>
-							{newProducts.map((product) => (
-								<div key={product.id} className="wrap-pic-w product-item">
-									<div className="block1">
-										<img src={product.imageUrl} alt={product.name} />
-										<button
-											onClick={() => handleShopNowClick(product.id)}
-											className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
-										>
-											<div className="block1-txt-child1 flex-col-l">
-												<span className="block1-info stext-102 trans-04">{product.name}</span>
+							{newProducts && newProducts.length > 0 ? (
+								newProducts.map((product) => (
+									product && product.id && product.name && product.imageUrl ? (
+										<div key={product.id} className="wrap-pic-w product-item">
+											<div className="block1">
+												<img src={product.imageUrl} alt={product.name} />
+												<button
+													onClick={() => handleShopNowClick(product.id)}
+													className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
+												>
+													<div className="block1-txt-child1 flex-col-l">
+														<span className="block1-info stext-102 trans-04">{product.name}</span>
+													</div>
+													<div className="block1-txt-child2 p-b-4 trans-05">
+														<div className="block1-link stext-101 cl0 trans-09">{t('shop_now')}</div>
+													</div>
+												</button>
 											</div>
-											<div className="block1-txt-child2 p-b-4 trans-05">
-												<div className="block1-link stext-101 cl0 trans-09">Vào cửa hàng ngay</div>
-											</div>
-										</button>
-									</div>
-								</div>
-							))}
+										</div>
+									) : null
+								))
+							) : (
+								<p>{t('no_products_found')}</p>
+							)}
 						</Slider>
 					)}
 				</div>
@@ -204,32 +227,38 @@ const Home = () => {
 			<section className="bg0 p-t-23 p-b-140">
 				<div className="container">
 					<div className="p-b-10">
-						<h3 className="ltext-103 cl5">SẢN PHẨM YÊU THÍCH</h3>
+						<h3 className="ltext-103 cl5">{t('top_favorites')}</h3>
 					</div>
 					{loading.favorites ? (
-						<p>Loading favorite products...</p>
+						<p>{t('loading_favorite_products')}</p>
 					) : error.favorites ? (
-						<p>Error: {error.favorites}</p>
+						<p>{t('error')}: {error.favorites}</p>
 					) : (
 						<Slider {...settings}>
-							{favoriteProducts.map((product) => (
-								<div key={product.id} className="wrap-pic-w product-item">
-									<div className="block1">
-										<img src={product.imageUrl} alt={product.name} />
-										<button
-											onClick={() => handleShopNowClick(product.id)}
-											className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
-										>
-											<div className="block1-txt-child1 flex-col-l">
-												<span className="block1-info stext-102 trans-04">{product.name}</span>
+							{favoriteProducts && favoriteProducts.length > 0 ? (
+								favoriteProducts.map((product) => (
+									product && product.id && product.name && product.imageUrl ? (
+										<div key={product.id} className="wrap-pic-w product-item">
+											<div className="block1">
+												<img src={product.imageUrl} alt={product.name} />
+												<button
+													onClick={() => handleShopNowClick(product.id)}
+													className="block1-txt ab-t-l s-full flex-col-l-sb p-lr-38 p-tb-34 trans-03 respon3"
+												>
+													<div className="block1-txt-child1 flex-col-l">
+														<span className="block1-info stext-102 trans-04">{product.name}</span>
+													</div>
+													<div className="block1-txt-child2 p-b-4 trans-05">
+														<div className="block1-link stext-101 cl0 trans-09">{t('shop_now')}</div>
+													</div>
+												</button>
 											</div>
-											<div className="block1-txt-child2 p-b-4 trans-05">
-												<div className="block1-link stext-101 cl0 trans-09">Shop Now</div>
-											</div>
-										</button>
-									</div>
-								</div>
-							))}
+										</div>
+									) : null
+								))
+							) : (
+								<p>{t('no_products_found')}</p>
+							)}
 						</Slider>
 					)}
 				</div>
