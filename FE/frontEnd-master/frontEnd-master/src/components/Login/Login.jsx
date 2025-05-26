@@ -4,7 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';
-
+import { useToast } from '../../Toast/ToastContext';
 const Login = () => {
     const navigate = useNavigate();
     const [message, setMessage] = useState('');
@@ -12,7 +12,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
-
+    const { showToast } = useToast();
     // Validate email
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -88,8 +88,8 @@ const Login = () => {
             localStorage.setItem('idUser', idUser);
             localStorage.setItem('tokenExpiration', Date.now() + expiration);
 
-            setMessage('Đăng nhập thành công!');
-            navigate('/home');
+            showToast('Đăng nhập thành công!', 'success');
+            navigate('/profile');
         } catch (error) {
             console.error('Login with Google failed:', error);
             if (error.response) {

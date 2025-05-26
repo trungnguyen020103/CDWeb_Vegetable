@@ -16,11 +16,13 @@ import Profile from "./components/Profile/Profile";
 import ChangePassword from "./components/ChangePassword/ChangePassword";
 import ForgotPassword from "./components/ForgotPassword/ForgotPassword";
 import ChangePassWithCode from "./components/ChangePassword/ChangPassWithCode";
+import ShoppingCart from "./components/ShoppingCart/ShoppingCart";
 // import ChangePassword from './components/ChangePassword/ChangePassword';
 // import Profile from './components/Profile/Profile';
 // import SearchResults from './components/SearchResults/SearchResults';
 // import Payment from "./components/Payment/Payment";
-
+import { ToastProvider } from './Toast/ToastContext';
+import OrderTable from "./components/Order/OrderTable";
 
 const Layout = () => {
     console.log('Rendering Layout');
@@ -46,17 +48,17 @@ const router = createBrowserRouter([
             { path: 'product/:id', element: <ProductDetail /> },
             // { path: 'product/1', element: <ProductDetail /> },
 
-            // { path: 'shoppingCart', element: <ShoppingCart /> },
+            { path: 'shoppingCart', element: <ShoppingCart /> },
             // { path: 'contact', element: <Contact /> },
             { path: 'register', element: <Register /> },
             { path: 'login', element: <Login /> },
             { path: 'changePassword', element: <ChangePassword /> },
             { path: 'forgotPassword', element: <ForgotPassword /> },
-            { path: 'changewithcode', element: <ChangePassWithCode /> },,
+            { path: 'changewithcode', element: <ChangePassWithCode /> },
             // { path: 'profile/:id', element: <Profile /> },
             { path: 'profile', element: <Profile /> },
             // { path: 'search', element: <SearchResults /> },
-
+            { path: 'order', element: <OrderTable /> },
             // { path: 'payment', element: <Payment/> },
         ],
     },
@@ -64,9 +66,11 @@ const router = createBrowserRouter([
 function App() {
     return (
         <Provider store={store}>
-            <div className="App">
-                <RouterProvider router={router} />
-            </div>
+            <ToastProvider>
+                <div className="App">
+                    <RouterProvider router={router} />
+                </div>
+            </ToastProvider>
         </Provider>
     );
 }

@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import './ProductList.css';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
-import './ProductList.css';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../../store/Actions';
 const ProductList = () => {
+    const dispatch = useDispatch();
+    // const cart = useSelector(state => state.cart) || [];
+
     const [products, setProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -82,13 +86,14 @@ const ProductList = () => {
             setCurrentPage(page);
         }
     };
-
-    const handleAddToCart = (product) => {
-        if (product && product.name) {
-            alert(`Đã thêm ${product.name} vào giỏ hàng!`);
-        } else {
+    const handleAddToCart = (product, quantity = 1) => {
+        if (!product || !product.id) {
             console.error('Invalid product:', product);
+            return;
         }
+        // const existingProduct = Array.isArray(cart) ? cart.find(item => item.id === product.id) : null;
+        dispatch(addToCart({ id: product.id, quantity }));
+        alert(`Đã thêm ${product.name} vào giỏ hàng!`);
     };
 
     const handleAddToWishlist = (product) => {
@@ -176,7 +181,7 @@ const ProductList = () => {
             )}
 
             <div className="product-grid">
-                {console.log('Rendering products:', products)}
+                {/*{console.log('Rendering products:', products)}*/}
                 {products.map((product) => {
                     if (!product || typeof product !== 'object' || !product.id || !product.name || !product.price) {
                         console.error('Invalid product:', product);
@@ -251,5 +256,4 @@ const ProductList = () => {
         </div>
     );
 };
-
 export default ProductList;
