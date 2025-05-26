@@ -13,20 +13,19 @@ const Header = () => {
 	const dispatch = useDispatch();
 	const cart = useSelector(state => state.cart);
 
-	useEffect(() => {
-		fetch('/session')
-			.then((response) => response.json())
-			.then((data) => {
-				if (data.loggedIn) {
-					setLoggedIn(true);
-					setUsername(data.username);
-					setId(data.userId);
-				}
-			})
-			.catch((error) => {
-				console.error('Error fetching session:', error);
-			});
-	}, []);
+	// useEffect(() => {
+	// 	fetch('/session')
+	// 		.then((response) => response.json())
+	// 		.then((data) => {
+	// 			if (data.loggedIn) {
+	// 				setLoggedIn(true);
+	// 				setUsername(data.username);
+	// 				setId(data.userId);
+	// 		})s
+	// 		.catch((error) => {
+	// 			console.error('Error fetching session:', error);
+	// 		});
+	// }, []);
 
 	const handleLogout = async () => {
 		try {
