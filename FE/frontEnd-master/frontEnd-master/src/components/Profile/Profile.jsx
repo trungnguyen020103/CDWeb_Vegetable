@@ -1,27 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import axios from 'axios';
 import './profile.css';
 
 const Profile = () => {
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
+    const idUser = localStorage.getItem('idUser');
+    const token = localStorage.getItem('accessToken');
+
+    const fetchUser = useCallback(async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/user/getbyid/${idUser}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setUser(response.data);
+        } catch (error) {
+            console.error('Lỗi khi fetch user:', error);
+            setError('Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
+            if (error.response?.status === 401) {
+                navigate('/login');
+            }
+        }
+    }, [idUser, token, navigate]);
 
     useEffect(() => {
-        const idUser = localStorage.getItem('idUser');
-        console.log('idUser in Profile:', idUser);
-        if (!idUser) {
+        if (!idUser || !token) {
             navigate('/login');
+        } else {
+            fetchUser();
         }
-    }, []);
-
-    const user = {
-        username: 'Nguyen Van A',
-        email: 'nguyenvana@example.com',
-        dob: '01/01/1990',
-        address: '123 Đường ABC, Quận 1, TP.HCM',
-        gender: '1',
-        phoneNumber: '0123456789',
-    };
+    }, [idUser, token, fetchUser, navigate]);
 
     const logout = () => {
         localStorage.removeItem('accessToken');
@@ -30,22 +42,24 @@ const Profile = () => {
         localStorage.removeItem('idUser');
         localStorage.removeItem('tokenExpiration');
 
-        if (window.google && window.google.accounts) {
+        if (window.google?.accounts?.id) {
             window.google.accounts.id.disableAutoSelect();
         }
 
-        window.location.href = '/login';
+        navigate('/login');
     };
 
-    const avatarUrl =
-        user.gender === '1'
-            ? 'https://startbootstrap.github.io/startbootstrap-freelancer/assets/img/avataaars.svg'
-            : user.gender === '2'
-                ? 'https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp'
-                : 'https://storage.timviec365.vn/timviec365/pictures/images/lgbt-la-gi(2).jpg';
+    if (error) {
+        return <div className="text-danger text-center">{error}</div>;
+    }
 
-    const genderText =
-        user.gender === '1' ? 'Nam' : user.gender === '2' ? 'Nữ' : 'Giới Tính Khác';
+    if (!user) {
+        return <div className="text-center">Đang tải...</div>;
+    }
+
+    const avatarUrl ='https://startbootstrap.github.io/startbootstrap-freelancer/assets/img/avataaars.svg';
+
+
 
     return (
         <div>
@@ -68,34 +82,32 @@ const Profile = () => {
                                             className="img-fluid my-5"
                                             style={{ width: '80px' }}
                                         />
-                                        <h5 className="profile-username">{user.username}</h5>
-
-                                        <a>
-                                            <button
-                                                className="profile-button mt-2"
-                                                style={{ backgroundColor: '#E9FF97' }}
-                                            >
-                                                Đổi thông tin
-                                            </button>
-                                        </a>
-                                        <a href="/changePassword">
-                                            <button
-                                                className="profile-button"
-                                                style={{ backgroundColor: '#FFD18E' }}
-                                            >
-                                                Đổi Mật Khẩu
-                                            </button>
-                                        </a>
+                                        <h5 className="profile-username">{user.fullname || 'N/A'}</h5>
                                         <button
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
+                                            onClick={() => navigate('/edit-profile')}
+                                        >
+                                            Đổi thông tin
+                                        </button>
+                                        <button
+                                            className="profile-button mt-2"
+                                            style={{ backgroundColor: '#E9FF97' }}
+                                            onClick={() => navigate('/changePassword')}
+                                        >
+                                            Đổi Mật Khẩu
+                                        </button>
+                                        <button
+                                            className="profile-button mt-2"
+                                            style={{ backgroundColor: '#E9FF97' }}
+                                            onClick={() => navigate('/order')}
                                         >
                                             Thông tin đơn hàng
                                         </button>
                                         <button
-                                            onClick={logout}
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
+                                            onClick={logout}
                                         >
                                             Đăng xuất
                                         </button>
@@ -107,33 +119,29 @@ const Profile = () => {
                                             <div className="row pt-1">
                                                 <div className="col-12 mb-6">
                                                     <h6>Email</h6>
-                                                    <p className="text-muted">{user.email}</p>
+                                                    <p className="text-muted">{user.email || 'N/A'}</p>
                                                 </div>
                                                 <div className="col-6 mb-3">
-                                                    <h6>Ngày Sinh</h6>
-                                                    <p className="text-muted">{user.dob}</p>
+                                                    <h6>Họ tên người dùng</h6>
+                                                    <p className="text-muted">{user.fullname}</p>
                                                 </div>
                                                 <div className="col-6 mb-3">
                                                     <h6>Địa Chỉ</h6>
-                                                    <p className="text-muted">{user.address}</p>
-                                                </div>
-                                                <div className="col-6 mb-3">
-                                                    <h6>Giới Tính</h6>
-                                                    <p className="text-muted">{genderText}</p>
+                                                    <p className="text-muted">{user.address || 'N/A'}</p>
                                                 </div>
                                                 <div className="col-6 mb-3">
                                                     <h6>Số Điện Thoại</h6>
-                                                    <p className="text-muted">{user.phoneNumber}</p>
+                                                    <p className="text-muted">{user.phonenumber || 'N/A'}</p>
                                                 </div>
                                             </div>
                                             <div className="d-flex justify-content-start">
-                                                <a href="#!">
+                                                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
                                                     <i className="fab fa-facebook-f fa-lg me-3"></i>
                                                 </a>
-                                                <a href="#!">
+                                                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
                                                     <i className="fab fa-twitter fa-lg me-3"></i>
                                                 </a>
-                                                <a href="#!">
+                                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
                                                     <i className="fab fa-instagram fa-lg"></i>
                                                 </a>
                                             </div>

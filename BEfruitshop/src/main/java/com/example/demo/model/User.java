@@ -1,11 +1,15 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "users")
@@ -34,6 +38,9 @@ public class User {
     private String phonenumber;
 
     private Integer role;
+    @OneToMany(mappedBy = "user")
+    @JsonBackReference
+    private List<Order> orders;
     public User() {}
 
     public User(Integer id, String password, String email, String fullname, String address, String phonenumber, Integer role) {

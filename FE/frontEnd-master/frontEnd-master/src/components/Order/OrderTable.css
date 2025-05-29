@@ -1,5 +1,155 @@
 /* OrderTable.css - User Version */
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
+/* Modal Content */
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+/* Modal Overlay (already defined in previous response) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Content (already defined, but adjust width for details modal) */
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.modal-details-content {
+    width: 600px; /* Wider for details modal */
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Modal Body */
+.modal-body {
+    padding: 15px;
+    font-size: 1rem;
+    color: #333;
+}
+
+.order-details-info p {
+    margin: 5px 0;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 15px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.modal-footer .btn {
+    margin-left: 10px;
+}
+
+/* Table Styling */
+.table.custom-table {
+    margin-bottom: 0;
+}
+
+.table.custom-table th,
+.table.custom-table td {
+    vertical-align: middle;
+}
+
+.table.custom-table img {
+    border-radius: 4px;
+}
+.modal-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Modal Body */
+.modal-body {
+    padding: 15px;
+    font-size: 1rem;
+    color: #333;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 15px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.modal-footer .btn {
+    margin-left: 10px;
+}
 .order-container {
     padding: 20px;
     background: #f8f9fa;
@@ -258,8 +408,9 @@
 /* Action Buttons */
 .action-buttons {
     display: flex;
-    gap: 5px;
+    gap: 10px;
     justify-content: center;
+    margin-right: 50%;
 }
 
 .action-buttons .btn {

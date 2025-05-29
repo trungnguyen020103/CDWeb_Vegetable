@@ -2,8 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {loadCart, removeFromCart, updateQuantity} from '../../store/Actions';
 import axios from 'axios';
-
+import { useToast } from '../../Toast/ToastContext';
 const ShoppingCart = () => {
+    const {showToast} = useToast();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -45,6 +46,7 @@ const ShoppingCart = () => {
 
     const handleRemoveFromCart = (productId) => {
         dispatch(removeFromCart(productId));
+        showToast('Xóa thành công sản phẩm', 'success')
     };
 // doi so luong sp
     const handleQuantityChange = (productId, newQuantity) => {
@@ -216,7 +218,7 @@ const ShoppingCart = () => {
                                                     <button
                                                         onClick={() => handleRemoveFromCart(product.id)}
                                                         type="button"
-                                                        className="btn btn-primary"
+                                                        class="btn btn-success"
                                                     >
                                                         Xóa
                                                     </button>
