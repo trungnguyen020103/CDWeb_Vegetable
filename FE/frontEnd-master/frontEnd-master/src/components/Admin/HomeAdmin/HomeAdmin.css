@@ -1,0 +1,117 @@
+.home-admin-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.home-admin-content {
+    display: flex;
+    flex-grow: 1;
+}
+
+.home-admin-sidebar {
+    width: 250px;
+    height: 100vh;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.home-admin-sidebar-content {
+    padding: 1rem;
+}
+
+.home-admin-logo {
+    margin-bottom: 1.25rem;
+}
+
+.home-admin-logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #007bff;
+}
+
+.home-admin-nav {
+    list-style: none;
+    padding: 0;
+}
+
+.home-admin-nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.home-admin-nav-link {
+    padding: 0.5rem 1rem;
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    border-radius: 0.25rem;
+}
+
+.home-admin-nav-link:hover {
+    background-color: #f8f9fa;
+}
+
+.home-admin-main {
+    flex-grow: 1;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.home-admin-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.home-admin-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
+}
+
+.home-admin-card-body {
+    padding: 1rem;
+}
+
+.home-admin-text {
+    color: #6c757d;
+}
+
+/* New CSS for Header */
+.home-admin-header {
+    padding: 1rem;
+    background-color: #343a40;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #454d55;
+}
+
+.home-admin-header-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.home-admin-header-title {
+    margin: 0;
+}
+
+.home-admin-header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.home-admin-user-info {
+    font-size: 0.9rem;
+    color: #ced4da;
+}
+
+.home-admin-btn {
+    padding: 0.25rem 1rem;
+    font-size: 0.9rem;
+}
+
+.home-admin-nav-link.active {
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 0.25rem;
+}

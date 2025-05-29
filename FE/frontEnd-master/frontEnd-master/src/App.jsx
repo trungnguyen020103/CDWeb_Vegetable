@@ -23,6 +23,8 @@ import ShoppingCart from "./components/ShoppingCart/ShoppingCart";
 // import Payment from "./components/Payment/Payment";
 import { ToastProvider } from './Toast/ToastContext';
 import OrderTable from "./components/Order/OrderTable";
+import HomeAdmin from "./components/Admin/HomeAdmin/HomeAdmin";
+import AdminLayout from "./AdminLayout";
 
 const Layout = () => {
     console.log('Rendering Layout');
@@ -34,32 +36,30 @@ const Layout = () => {
         </div>
     );
 };
-
 const router = createBrowserRouter([
     {
         path: '/',
-        element: <Layout />,
+        element: <Layout />, // layout có Header + Footer
         children: [
             { index: true, element: <Home /> },
             { path: 'home', element: <Home /> },
             { path: 'product', element: <ProductList /> },
-            // { path: 'aboutus', element: <AboutUs /> },
-            // { path: 'product', element: <Product /> },
             { path: 'product/:id', element: <ProductDetail /> },
-            // { path: 'product/1', element: <ProductDetail /> },
-
             { path: 'shoppingCart', element: <ShoppingCart /> },
-            // { path: 'contact', element: <Contact /> },
             { path: 'register', element: <Register /> },
             { path: 'login', element: <Login /> },
             { path: 'changePassword', element: <ChangePassword /> },
             { path: 'forgotPassword', element: <ForgotPassword /> },
             { path: 'changewithcode', element: <ChangePassWithCode /> },
-            // { path: 'profile/:id', element: <Profile /> },
             { path: 'profile', element: <Profile /> },
-            // { path: 'search', element: <SearchResults /> },
             { path: 'order', element: <OrderTable /> },
-            // { path: 'payment', element: <Payment/> },
+        ],
+    },
+    {
+        path: '/admin',
+        element: <AdminLayout />,
+        children: [
+            { path: 'home', element: <HomeAdmin /> },
         ],
     },
 ]);

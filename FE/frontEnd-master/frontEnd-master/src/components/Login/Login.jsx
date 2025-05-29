@@ -91,6 +91,7 @@ const Login = () => {
             showToast('Đăng nhập thành công!', 'success');
             navigate('/profile');
         } catch (error) {
+            showToast('Đăng nhập thất bại!', 'error');
             console.error('Login with Google failed:', error);
             if (error.response) {
                 setMessage(error.response.data.message || 'Đăng nhập thất bại.');
@@ -125,9 +126,10 @@ const Login = () => {
                 localStorage.setItem('idUser', idUser);
                 localStorage.setItem('tokenExpiration', Date.now() + expiration);
 
-                setMessage('Đăng nhập thành công!');
-                navigate('/home');
+                showToast('Đăng nhập thành công!', 'success');
+                navigate('/profile');
             } catch (error) {
+                showToast('Đăng nhập thất bại!', 'error');
                 console.error('Login failed:', error);
                 if (error.response) {
                     setMessage(error.response.data || 'Đăng nhập thất bại.');

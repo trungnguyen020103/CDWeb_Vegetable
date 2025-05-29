@@ -5,10 +5,11 @@ import axios from 'axios';
 import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/Actions';
+import { useToast } from '../../Toast/ToastContext';
 const ProductList = () => {
     const dispatch = useDispatch();
     // const cart = useSelector(state => state.cart) || [];
-
+    const { showToast } = useToast();
     const [products, setProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -91,9 +92,8 @@ const ProductList = () => {
             console.error('Invalid product:', product);
             return;
         }
-        // const existingProduct = Array.isArray(cart) ? cart.find(item => item.id === product.id) : null;
         dispatch(addToCart({ id: product.id, quantity }));
-        alert(`Đã thêm ${product.name} vào giỏ hàng!`);
+        showToast('Thêm sản phẩm thành công!', 'success');
     };
 
     const handleAddToWishlist = (product) => {
@@ -137,10 +137,12 @@ const ProductList = () => {
                     />
                 </div>
                 <div className="header-icons">
-                    <button className="icon-btn" aria-label="Xem giỏ hàng">
-                        <span className="cart-icon">🛒</span>
-                        <span className="icon-label">Giỏ hàng</span>
-                    </button>
+                    <a href="/shoppingCart">
+                        <button className="icon-btn" aria-label="Xem giỏ hàng">
+                            <span className="cart-icon">🛒</span>
+                            <span className="icon-label">Giỏ hàng</span>
+                        </button>
+                    </a>
                     <button className="icon-btn" aria-label="Xem danh sách yêu thích">
                         <span className="heart-icon">❤️</span>
                         <span className="icon-label">Yêu thích</span>
