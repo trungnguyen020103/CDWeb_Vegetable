@@ -20,21 +20,6 @@ public class GoogleTokenVerifier {
                 .setAudience(Collections.singletonList(CLIENT_ID))
                 .build();
     }
-
-
-    public String verifyTokenAndGetEmail(String idTokenString) {
-        try {
-            GoogleIdToken idToken = verifier.verify(idTokenString);
-            if (idToken != null) {
-                GoogleIdToken.Payload payload = idToken.getPayload();
-                return payload.getEmail();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     public GoogleUserInfo verifyTokenAndGetUserInfo(String idTokenString) throws GeneralSecurityException, IOException {
         GoogleIdToken idToken = verifier.verify(idTokenString);
         if (idToken != null) {

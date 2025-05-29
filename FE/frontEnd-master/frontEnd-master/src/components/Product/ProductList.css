@@ -143,8 +143,9 @@
 /* Grid sản phẩm */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 cột */
-    gap: 25px;
+    grid-template-columns: repeat(4, 1fr); /* 4 sản phẩm mỗi hàng */
+    gap: 20px;
+    margin-top: 20px;
 }
 
 /* Card sản phẩm */
@@ -156,8 +157,8 @@
     padding: 20px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
+    width: 100%; /* Đảm bảo thẻ sản phẩm lấp đầy cột */
     height: fit-content;
-    width: fit-content;
 }
 
 .product-card:hover {
@@ -330,9 +331,34 @@
     border-color: #e2e8f0;
 }
 
+/* Responsive */
 @media (max-width: 1024px) {
     .product-grid {
-        grid-template-columns: repeat(3, 1fr); /* Giảm xuống 3 cột */
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1200px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 cột trên màn hình nhỏ hơn 1200px */
+    }
+}
+
+@media (max-width: 900px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 cột trên màn hình nhỏ hơn 900px */
     }
 
     .search-bar {
@@ -344,9 +370,9 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .product-grid {
-        grid-template-columns: repeat(2, 1fr); /* Giảm xuống 2 cột */
+        grid-template-columns: 1fr; /* 1 cột trên màn hình nhỏ hơn 600px */
     }
 
     .header-controls {
@@ -370,12 +396,6 @@
 
     .product-list-title {
         font-size: 24px;
-    }
-}
-
-@media (max-width: 480px) {
-    .product-grid {
-        grid-template-columns: 1fr; /* Giảm xuống 1 cột */
     }
 
     .product-image-wrapper {

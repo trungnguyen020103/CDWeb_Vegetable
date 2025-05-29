@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import './changepassword.css';
 import axios from 'axios';
 import {useNavigate} from "react-router-dom";
+import { useToast } from '../../Toast/ToastContext';
 const ChangePassword = () => {
+    const {showToast} = useToast();
     const navigate = useNavigate();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -79,13 +81,14 @@ const ChangePassword = () => {
             );
 
             if (response.status ===200) {
+                showToast('Đổi mật khẩu thành công!', 'success');
                 setMessage(response.data.message || 'Đổi mật khẩu thành công!')
                     navigate('/profile')
-
             } else {
                 setMessage(response.data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
             }
         } catch (error) {
+            showToast('Đổi mật khẩu thất bại!', 'error');
             console.error('Error:', error);
             const errorMsg = error.response?.data?.message || error.response?.data?.errors?.newPassword || 'Có lỗi xảy ra, vui lòng thử lại.';
             setMessage(errorMsg);

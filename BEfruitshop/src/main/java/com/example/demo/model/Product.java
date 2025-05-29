@@ -21,7 +21,7 @@ public class Product {
     private String description;
 
     @Column(name = "price")
-    private BigDecimal price;
+    private double price;
 
     @Column(name = "stock")
     private Integer stock;
@@ -62,11 +62,11 @@ public class Product {
         this.description = description;
     }
 
-    public BigDecimal getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 

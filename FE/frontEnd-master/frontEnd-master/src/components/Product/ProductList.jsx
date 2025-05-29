@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import axios from '../../api/axiosConfig';
-import { debounce } from 'lodash';
-import { useTranslation } from 'react-i18next';
 import './ProductList.css';
-
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { debounce } from 'lodash';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../../store/Actions';
+import { useToast } from '../../Toast/ToastContext';
 const ProductList = () => {
-    const { t, i18n } = useTranslation();
+    const dispatch = useDispatch();
+    // const cart = useSelector(state => state.cart) || [];
+    const { showToast } = useToast();
     const [products, setProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -15,25 +18,24 @@ const ProductList = () => {
     const [sortOption, setSortOption] = useState('');
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [productsError, setProductsError] = useState(null);
-    const [categoriesError, setCategoriesError] = useState(null);
+    const [error, setError] = useState(null);
     const productsPerPage = 12;
 
     const fetchCategories = useCallback(async () => {
         try {
-            const response = await axios.get('/api/categories', {
-                headers: { 'Accept-Language': i18n.language },
-            });
+            const response = await axios.get('http://localhost:8080/api/categories');
+            console.log('Raw categories response:', response.data);
             if (Array.isArray(response.data)) {
                 setCategories(response.data);
-                setCategoriesError(null);
             } else {
-                setCategoriesError(t('error_loading_categories'));
+                console.error('Categories data is not an array:', response.data);
+                setError('Dữ liệu danh mục không hợp lệ.');
             }
         } catch (error) {
-            setCategoriesError(t('error_loading_categories'));
+            console.error('Error fetching categories:', error.message);
+            setError('Không thể tải danh mục.');
         }
-    }, [t, i18n.language]);
+    }, []);
 
     const fetchProducts = useCallback(async () => {
         setIsLoading(true);
@@ -45,52 +47,39 @@ const ProductList = () => {
                 category: selectedCategory || null,
                 sort: sortOption || null,
             };
-            const response = await axios.get('/api/products', {
-                params,
-                headers: { 'Accept-Language': i18n.language },
-            });
+            console.log('Fetching products with params:', params);
+            const response = await axios.get('http://localhost:8080/api/products', { params });
+            console.log('Raw products response:', response.data);
             if (response.data && Array.isArray(response.data.content)) {
                 setProducts(response.data.content);
                 setTotalPages(response.data.totalPages || 1);
-                setProductsError(null);
             } else {
-                setProductsError(t('error_loading_products'));
+                console.error('Products content is not an array:', response.data);
+                setError('Dữ liệu sản phẩm không hợp lệ.');
             }
         } catch (error) {
-            setProductsError(t('error_loading_products'));
+            console.error('Error fetching products:', error.message);
+            setError('Không thể tải sản phẩm. Vui lòng thử lại.');
         } finally {
             setIsLoading(false);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }, [currentPage, searchQuery, selectedCategory, sortOption, t, i18n.language]);
+    }, [currentPage, searchQuery, selectedCategory, sortOption]);
 
     useEffect(() => {
         fetchCategories();
         fetchProducts();
     }, [fetchCategories, fetchProducts]);
 
-    useEffect(() => {
-        console.log('Language changed to:', i18n.language);
-    }, [i18n.language]);
-
     const formatPrice = (price) => {
         if (typeof price !== 'number' && typeof price !== 'string') {
+            console.error('Invalid price:', price);
             return 'N/A';
         }
-        let numericPrice;
-        if (typeof price === 'string') {
-            numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
-        } else {
-            numericPrice = Number(price);
-        }
-        if (isNaN(numericPrice)) {
-            return 'N/A';
-        }
-        const currency = i18n.language === 'vi' ? 'VND' : 'USD';
-        return new Intl.NumberFormat(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
+        return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
-            currency: currency,
-        }).format(numericPrice);
+            currency: 'VND',
+        }).format(Number(price));
     };
 
     const handlePageChange = (page) => {
@@ -98,16 +87,20 @@ const ProductList = () => {
             setCurrentPage(page);
         }
     };
-
-    const handleAddToCart = (product) => {
-        if (product && product.name) {
-            alert(t('added_to_cart', { name: product.name }));
+    const handleAddToCart = (product, quantity = 1) => {
+        if (!product || !product.id) {
+            console.error('Invalid product:', product);
+            return;
         }
+        dispatch(addToCart({ id: product.id, quantity }));
+        showToast('Thêm sản phẩm thành công!', 'success');
     };
 
     const handleAddToWishlist = (product) => {
         if (product && product.name) {
-            alert(t('added_to_wishlist', { name: product.name }));
+            alert(`Đã thêm ${product.name} vào danh sách yêu thích!`);
+        } else {
+            console.error('Invalid product:', product);
         }
     };
 
@@ -137,72 +130,89 @@ const ProductList = () => {
                     <span className="search-icon">🔍</span>
                     <input
                         type="text"
-                        placeholder={t('search_placeholder')}
+                        placeholder="Tìm kiếm sản phẩm (VD: Rau)..."
                         value={searchQuery}
                         onChange={handleSearch}
-                        aria-label={t('search_placeholder')}
+                        aria-label="Tìm kiếm sản phẩm"
                     />
                 </div>
                 <div className="header-icons">
-                    <button className="icon-btn" aria-label={t('cart')}>
-                        <span className="cart-icon">🛒</span>
-                        <span className="icon-label">{t('cart')}</span>
-                    </button>
-                    <button className="icon-btn" aria-label={t('add_to_wishlist')}>
+                    <a href="/shoppingCart">
+                        <button className="icon-btn" aria-label="Xem giỏ hàng">
+                            <span className="cart-icon">🛒</span>
+                            <span className="icon-label">Giỏ hàng</span>
+                        </button>
+                    </a>
+                    <button className="icon-btn" aria-label="Xem danh sách yêu thích">
                         <span className="heart-icon">❤️</span>
-                        <span className="icon-label">{t('add_to_wishlist')}</span>
+                        <span className="icon-label">Yêu thích</span>
                     </button>
                 </div>
             </div>
 
             <div className="filter-controls">
-                <select onChange={handleCategoryChange} value={selectedCategory} aria-label={t('all_categories')}>
-                    <option value="">{t('all_categories')}</option>
-                    {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                            {category.name}
-                        </option>
-                    ))}
+                <select onChange={handleCategoryChange} value={selectedCategory} aria-label="Chọn danh mục">
+                    <option value="">Tất cả danh mục</option>
+                    {categories.map((category) => {
+                        if (!category || typeof category !== 'object' || !category.id || !category.name) {
+                            console.error('Invalid category:', category);
+                            return null;
+                        }
+                        return (
+                            <option key={category.id} value={category.id}>
+                                {category.name}
+                            </option>
+                        );
+                    })}
                 </select>
-                <select onChange={handleSortChange} value={sortOption} aria-label={t('sort_by')}>
-                    <option value="">{t('sort_by')}</option>
-                    <option value="best_selling">{t('sort_best_selling')}</option>
-                    <option value="price_asc">{t('sort_price_asc')}</option>
-                    <option value="price_desc">{t('sort_price_desc')}</option>
-                    <option value="discount">{t('sort_discount')}</option>
+                <select onChange={handleSortChange} value={sortOption} aria-label="Chọn cách sắp xếp">
+                    <option value="">Sắp xếp</option>
+                    <option value="best_selling">Bán chạy</option>
+                    <option value="price_asc">Giá: Thấp đến Cao</option>
+                    <option value="price_desc">Giá: Cao đến Thấp</option>
+                    <option value="discount">Khuyến mãi</option>
                 </select>
             </div>
 
-            <h1 className="product-list-title">{t('organic_vegetables')}</h1>
+            <h1 className="product-list-title">Rau Củ Hữu Cơ</h1>
 
-            {categoriesError && <p className="error-message">{categoriesError}</p>}
-            {isLoading && <p className="loading-message">{t('loading_products')}</p>}
-            {productsError && <p className="error-message">{productsError}</p>}
-            {!isLoading && products.length === 0 && !productsError && <p>{t('no_products_found')}</p>}
+            {isLoading && <p className="loading-message">Đang tải sản phẩm...</p>}
+            {error && <p className="error-message">{error}</p>}
+            {!isLoading && products.length === 0 && !error && (
+                <p>Không tìm thấy sản phẩm nào phù hợp.</p>
+            )}
 
             <div className="product-grid">
-                {products.map((product) => (
-                    product && product.id && product.name && product.imageUrl ? (
+                {/*{console.log('Rendering products:', products)}*/}
+                {products.map((product) => {
+                    if (!product || typeof product !== 'object' || !product.id || !product.name || !product.price) {
+                        console.error('Invalid product:', product);
+                        return null;
+                    }
+                    return (
                         <div key={product.id} className="product-card">
                             <div className="product-image-wrapper">
                                 <img
                                     src={product.imageUrl || 'https://via.placeholder.com/150'}
                                     alt={product.name}
                                     className="product-image"
-                                    onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
+                                    onError={(e) => {
+                                        console.warn(`Failed to load image for ${product.name}: ${product.imageUrl}`);
+                                        e.target.src = 'https://via.placeholder.com/150';
+                                    }}
                                 />
                                 <button
                                     onClick={() => handleAddToCart(product)}
                                     className="add-to-cart-btn"
-                                    aria-label={t('add_to_cart')}
+                                    aria-label={`Thêm ${product.name} vào giỏ hàng`}
                                 >
-                                    <span className="cart-icon">🛒</span> {t('add_to_cart')}
+                                    <span className="cart-icon">🛒</span> Thêm vào giỏ hàng
                                 </button>
                             </div>
                             <button
                                 onClick={() => handleAddToWishlist(product)}
                                 className="wishlist-btn"
-                                aria-label={t('add_to_wishlist')}
+                                aria-label={`Thêm ${product.name} vào danh sách yêu thích`}
                             >
                                 <span className="heart-icon">❤️</span>
                             </button>
@@ -213,8 +223,8 @@ const ProductList = () => {
                             </h3>
                             <p className="product-price">{formatPrice(product.price)}</p>
                         </div>
-                    ) : null
-                ))}
+                    );
+                })}
             </div>
 
             <div className="pagination">
@@ -222,16 +232,16 @@ const ProductList = () => {
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                    aria-label={t('previous')}
+                    aria-label="Trang trước"
                 >
-                    {t('previous')}
+                    Trước
                 </button>
                 {[...Array(totalPages)].map((_, index) => (
                     <button
                         key={index + 1}
                         onClick={() => handlePageChange(index + 1)}
                         className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
-                        aria-label={`Page ${index + 1}`}
+                        aria-label={`Trang ${index + 1}`}
                     >
                         {index + 1}
                     </button>
@@ -240,13 +250,12 @@ const ProductList = () => {
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                    aria-label={t('next')}
+                    aria-label="Trang tiếp theo"
                 >
-                    {t('next')}
+                    Tiếp
                 </button>
             </div>
         </div>
     );
 };
-
 export default ProductList;
