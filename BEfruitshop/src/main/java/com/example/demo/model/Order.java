@@ -17,7 +17,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "userid")
-    @JsonBackReference // User là parent, Order là child => Order tham chiếu User là back reference
+    @JsonBackReference
     private User user;
 
     private LocalDateTime orderdate;

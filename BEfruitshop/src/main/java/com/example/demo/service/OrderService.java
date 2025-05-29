@@ -43,7 +43,6 @@ public class OrderService {
                 Integer productId = detail.getProduct().getId();
                 Product product = productRepository.findById(productId)
                         .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-
                 detail.setProduct(product);
                 double unitPrice = product.getPrice();
                 detail.setUnitprice(unitPrice);
