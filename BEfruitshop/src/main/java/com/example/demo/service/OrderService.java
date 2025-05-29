@@ -36,7 +36,7 @@ public class OrderService {
 
         order.setOrderdate(LocalDateTime.now());
 
-        double totalOrder = 0;
+
 
         if (order.getOrderDetails() != null) {
             for (OrderDetails detail : order.getOrderDetails()) {
@@ -44,17 +44,11 @@ public class OrderService {
                 Product product = productRepository.findById(productId)
                         .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-                detail.setProduct(product);
-                double unitPrice = product.getPrice();
-                detail.setUnitprice(unitPrice);
-                double totalDetail = unitPrice * detail.getQuantity();
-                detail.setTotal(totalDetail);
+                detail.setUnitprice(product.getPrice());
+                detail.setTotal(product.getPrice() * detail.getQuantity());
                 detail.setOrder(order);
-                totalOrder += totalDetail;
             }
         }
-
-        order.setTotal(totalOrder);
 
         return orderRepository.save(order);
     }

@@ -20,7 +20,7 @@ import ShoppingCart from "./components/ShoppingCart/ShoppingCart";
 // import ChangePassword from './components/ChangePassword/ChangePassword';
 // import Profile from './components/Profile/Profile';
 // import SearchResults from './components/SearchResults/SearchResults';
-// import Payment from "./components/Payment/Payment";
+import Payment from "./components/Payment/Payment";
 import { ToastProvider } from './Toast/ToastContext';
 import OrderTable from "./components/Order/OrderTable";
 import HomeAdmin from "./components/Admin/HomeAdmin/HomeAdmin";
@@ -53,6 +53,7 @@ const router = createBrowserRouter([
             { path: 'changewithcode', element: <ChangePassWithCode /> },
             { path: 'profile', element: <Profile /> },
             { path: 'order', element: <OrderTable /> },
+            { path: 'payment', element: <Payment /> },
         ],
     },
     {
