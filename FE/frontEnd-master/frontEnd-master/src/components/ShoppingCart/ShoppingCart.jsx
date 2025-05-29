@@ -1,16 +1,20 @@
-import React, {useEffect, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import {loadCart, removeFromCart, updateQuantity} from '../../store/Actions';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { loadCart, removeFromCart, updateQuantity } from '../../store/Actions';
 import axios from 'axios';
 import { useToast } from '../../Toast/ToastContext';
+import { useNavigate } from 'react-router-dom';
+
 const ShoppingCart = () => {
-    const {showToast} = useToast();
+    const { showToast } = useToast();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const cart = useSelector((state) => state.cart);
     const [selectedIds, setSelectedIds] = useState([]);
+
     const handleCheckboxChange = (id) => {
         setSelectedIds((prevSelected) =>
             prevSelected.includes(id)
@@ -25,7 +29,7 @@ const ShoppingCart = () => {
             try {
                 const productPromises = cart.map(async (item) => {
                     const response = await axios.get(`http://localhost:8080/api/products/${item.id}`);
-                    return {...response.data, quantity: item.quantity};
+                    return { ...response.data, quantity: item.quantity };
                 });
                 const fetchedProducts = await Promise.all(productPromises);
                 setProducts(fetchedProducts);
@@ -46,23 +50,34 @@ const ShoppingCart = () => {
 
     const handleRemoveFromCart = (productId) => {
         dispatch(removeFromCart(productId));
-        showToast('Xóa thành công sản phẩm', 'success')
+        showToast('Xóa thành công sản phẩm', 'success');
     };
-// doi so luong sp
+
     const handleQuantityChange = (productId, newQuantity) => {
         dispatch(updateQuantity(productId, newQuantity));
-
         setProducts((prevProducts) =>
             prevProducts.map((product) =>
-                product.id === productId
-                    ? {...product, quantity: newQuantity}
-                    : product
+                product.id === productId ? { ...product, quantity: newQuantity } : product
             )
         );
     };
 
+    const handleCheckout = () => {
+        if (selectedIds.length === 0) {
+            alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.");
+            return;
+        }
+
+        // Lọc danh sách sản phẩm được chọn
+        const selectedProducts = products.filter((product) => selectedIds.includes(product.id));
+
+        // Truyền danh sách sản phẩm được chọn qua navigate
+        navigate('/payment', { state: { selectedProducts } });
+    };
+
     return (
         <div>
+            {/* Giữ nguyên phần header cart */}
             <div className="wrap-header-cart js-panel-cart">
                 <div className="s-full js-hide-cart"></div>
                 <div className="header-cart flex-col-l p-l-65 p-r-25">
@@ -87,14 +102,11 @@ const ShoppingCart = () => {
                                             {product.name}
                                         </a>
                                         <span className="header-cart-item-info">
-        {product.quantity} x {product.price.toLocaleString()} VNĐ
-      </span>
+                      {product.quantity} x {product.price.toLocaleString()} VNĐ
+                    </span>
                                     </div>
-
-
                                 </li>
                             ))}
-
                         </ul>
                         <div className="w-full">
                             <div className="header-cart-total w-full p-tb-40">
@@ -123,7 +135,6 @@ const ShoppingCart = () => {
                 </div>
             </div>
 
-            {/* Main Cart Table */}
             <div className="container">
                 <div className="bread-crumb flex-w p-l-25 p-r-15 p-t-30 p-lr-0-lg">
                     <a href="index.html" className="stext-109 cl8 hov-cl1 trans-04">
@@ -189,7 +200,10 @@ const ShoppingCart = () => {
                                                         <div
                                                             className="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m"
                                                             onClick={() =>
-                                                                handleQuantityChange(product.id, Math.max(1, product.quantity - 1))
+                                                                handleQuantityChange(
+                                                                    product.id,
+                                                                    Math.max(1, product.quantity - 1)
+                                                                )
                                                             }
                                                         >
                                                             <i className="fs-16 zmdi zmdi-minus"></i>
@@ -218,7 +232,7 @@ const ShoppingCart = () => {
                                                     <button
                                                         onClick={() => handleRemoveFromCart(product.id)}
                                                         type="button"
-                                                        class="btn btn-success"
+                                                        className="btn btn-success"
                                                     >
                                                         Xóa
                                                     </button>
@@ -240,35 +254,16 @@ const ShoppingCart = () => {
 
                                 <div className="flex-w flex-sb-m bor15 p-t-18 p-b-15 p-lr-40 p-lr-15-sm">
                                     <div className="flex-w flex-m m-r-20 m-tb-5">
-                                        {/*<input*/}
-                                        {/*    className="stext-104 cl2 plh4 size-117 bor13 p-lr-20 m-r-10 m-tb-5"*/}
-                                        {/*    type="text"*/}
-                                        {/*    name="coupon"*/}
-                                        {/*    placeholder="Mã giảm giá"*/}
-                                        {/*/>*/}
-                                        {/*<div*/}
-                                        {/*    className="flex-c-m stext-101 cl2 size-118 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-5">*/}
-                                        {/*    Áp dụng giảm giá*/}
-                                        {/*</div>*/}
+                                        {/* Coupon input */}
                                     </div>
-                                    <div
-                                        className="flex-c-m stext-101 cl2 size-119 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-10">
-                                        <a
-                                            href="#"
-                                            onClick={() => {
-                                                if (selectedIds.length === 0) {
-                                                    alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.");
-                                                    return;
-                                                }
-
-                                                const url = `/payment?id=${selectedIds.join(',')}`;
-                                                window.location.href = url;
-                                            }}
+                                    <div className="flex-c-m stext-101 cl2 size-119 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-10">
+                                        <button
+                                            type="button"
+                                            onClick={handleCheckout}
                                             className="flex-c-m stext-101 cl2 size-119 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-10"
                                         >
                                             Thanh Toán
-                                        </a>
-
+                                        </button>
                                     </div>
                                 </div>
                             </div>
