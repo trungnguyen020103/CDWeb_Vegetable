@@ -5,7 +5,6 @@ import com.example.demo.dto.UserSignUpDto;
 import com.example.demo.google.GoogleSignUpDto;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
-
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;

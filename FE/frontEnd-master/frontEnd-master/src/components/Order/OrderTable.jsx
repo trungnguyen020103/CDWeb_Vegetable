@@ -5,47 +5,9 @@ import axios from 'axios';
 const OrderTable = () => {
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
-    const [orders, setOrders] = useState([
-        {
-            id: 'DH001',
-            orderDate: '2024-05-20',
-            productName: 'iPhone 14 Pro Max 256GB',
-            quantity: 1,
-            price: 25000000,
-            status: 'Đang xử lý',
-            shippingAddress: '123 Nguyễn Văn Linh, Q.7, TP.HCM',
-            note: 'Giao nhanh',
-            paymentMethod: 'COD',
-            total: 25000000,
-            orderDetails: [],
-        },
-        {
-            id: 'DH006',
-            orderDate: '2024-05-03',
-            productName: 'Google Pixel 8',
-            quantity: 1,
-            price: 18000000,
-            status: 'Đang xử lý',
-            shippingAddress: '111 Trần Hưng Đạo, Q.1, TP.HCM',
-            note: 'Giao trong giờ hành chính',
-            paymentMethod: 'Card',
-            total: 18000000,
-            orderDetails: [],
-        },
-        {
-            id: 'DH007',
-            orderDate: '2024-05-02',
-            productName: 'Sony WH-1000XM5',
-            quantity: 1,
-            price: 7000000,
-            status: 'Đã giao',
-            shippingAddress: '222 Hai Bà Trưng, Q.3, TP.HCM',
-            note: 'Giao cẩn thận',
-            paymentMethod: 'COD',
-            total: 7000000,
-            orderDetails: [],
-        },
-    ]);
+    const [orders, setOrders] = useState([]); // Initialize as empty array
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     // State for cancel modal
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -56,6 +18,13 @@ const OrderTable = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
 
     const fetchOrders = useCallback(async () => {
+        if (!idUser || !token) {
+            setError('Vui lòng đăng nhập để xem đơn hàng.');
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
         try {
             const response = await axios.get(`http://localhost:8080/api/order/get/user/${idUser}`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -63,7 +32,7 @@ const OrderTable = () => {
             const mappedOrders = response.data.map((order) => ({
                 id: order.id,
                 orderDate: order.orderdate,
-                productName: order.orderDetails?.[0]?.product?.name || 'Unknown Product',
+                productName: order.orderDetails?.[0]?.product?.name || 'Sản phẩm không xác định',
                 quantity: order.orderDetails?.reduce((sum, detail) => sum + detail.quantity, 0) || 1,
                 price: order.orderDetails?.[0]?.unitprice || order.total,
                 status: getStatusText(Number(order.status)),
@@ -75,15 +44,16 @@ const OrderTable = () => {
             }));
             setOrders(mappedOrders);
         } catch (error) {
-            console.error('Error fetching orders:', error);
+            console.error('Lỗi khi lấy đơn hàng:', error);
+            setError('Không thể tải đơn hàng. Vui lòng thử lại.');
+        } finally {
+            setIsLoading(false);
         }
     }, [idUser, token]);
 
     useEffect(() => {
-        if (idUser && token) {
-            fetchOrders();
-        }
-    }, [fetchOrders, idUser, token]);
+        fetchOrders();
+    }, [fetchOrders]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const ordersPerPage = 10;
@@ -151,12 +121,6 @@ const OrderTable = () => {
         }
     };
 
-    const calculateTotalSpent = () => {
-        return orders
-            .filter((order) => order.status === 'Đã giao')
-            .reduce((total, order) => total + order.total, 0);
-    };
-
     const handleCancelOrder = (orderId) => {
         setOrderToCancel(orderId);
         setShowCancelModal(true);
@@ -178,7 +142,7 @@ const OrderTable = () => {
                     )
                 );
             } catch (error) {
-                console.error('Error canceling order:', error);
+                console.error('Lỗi khi hủy đơn hàng:', error);
                 alert('Không thể hủy đơn hàng. Vui lòng thử lại.');
             }
         }
@@ -217,6 +181,9 @@ const OrderTable = () => {
                         Lịch Sử Đơn Hàng
                     </h3>
                     <div className="card-actions">
+                        <button className="btn btn-outline-light btn-sm" onClick={fetchOrders}>
+                            <i className="fa fa-refresh mr-1"></i>Làm mới
+                        </button>
                         <button className="btn btn-outline-light btn-sm">
                             <i className="fa fa-filter mr-1"></i>Lọc
                         </button>
@@ -238,58 +205,76 @@ const OrderTable = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {currentOrders.map((order) => (
-                            <tr key={order.id}>
-                                <td>
-                                    <strong className="order-id">{order.id}</strong>
-                                </td>
-                                <td>
-                                    <span className="order-date">{formatDate(order.orderDate)}</span>
-                                </td>
-                                <td>
-                                    <div className="product-info">
-                                        <small className="text-muted">{order.shippingAddress}</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span className="note">{order.note}</span>
-                                </td>
-                                <td>
-                                    <span className="payment-method">{order.paymentMethod}</span>
-                                </td>
-                                <td>
-                                    <span className="total-text">{formatCurrency(order.total)}</span>
-                                </td>
-                                <td>
-                    <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                      <i className={`fa ${getStatusIcon(order.status)} mr-1`}></i>
-                        {order.status}
-                    </span>
-                                </td>
-                                <td>
-                                    <div className="action-buttons">
-                                        <button
-                                            className="btn btn-sm btn-outline-info mr-1"
-                                            title="Xem chi tiết"
-                                            onClick={() => handleViewDetails(order)}
-                                        >
-                                            <i className="fa fa-eye"></i>
-                                        </button>
-                                        {order.status === 'Đang xử lý' && (
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                title="Hủy đơn hàng"
-                                                onClick={() => handleCancelOrder(order.id)}
-                                            >
-                                                <i className="fa fa-times"></i>
-                                            </button>
-                                        )}
-                                        {order.status === 'Đã giao'}
-                                        {order.status === 'Đang giao' }
-                                    </div>
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="8" className="text-center">
+                                    Đang tải...
                                 </td>
                             </tr>
-                        ))}
+                        ) : error ? (
+                            <tr>
+                                <td colSpan="8" className="text-center">
+                                    {error}
+                                </td>
+                            </tr>
+                        ) : currentOrders.length === 0 ? (
+                            <tr>
+                                <td colSpan="8" className="text-center">
+                                    Bạn chưa có đơn hàng nào.
+                                </td>
+                            </tr>
+                        ) : (
+                            currentOrders.map((order) => (
+                                <tr key={order.id}>
+                                    <td>
+                                        <strong className="order-id">{order.id}</strong>
+                                    </td>
+                                    <td>
+                                        <span className="order-date">{formatDate(order.orderDate)}</span>
+                                    </td>
+                                    <td>
+                                        <div className="product-info">
+                                            <small className="text-muted">{order.shippingAddress}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="note">{order.note}</span>
+                                    </td>
+                                    <td>
+                                        <span className="payment-method">{order.paymentMethod}</span>
+                                    </td>
+                                    <td>
+                                        <span className="total-text">{formatCurrency(order.total)}</span>
+                                    </td>
+                                    <td>
+                                        <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                                            <i className={`fa ${getStatusIcon(order.status)} mr-1`}></i>
+                                            {order.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            <button
+                                                className="btn btn-sm btn-outline-info mr-1"
+                                                title="Xem chi tiết"
+                                                onClick={() => handleViewDetails(order)}
+                                            >
+                                                <i className="fa fa-eye"></i>
+                                            </button>
+                                            {order.status === 'Đang xử lý' && (
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger"
+                                                    title="Hủy đơn hàng"
+                                                    onClick={() => handleCancelOrder(order.id)}
+                                                >
+                                                    <i className="fa fa-times"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                         </tbody>
                     </table>
                 </div>
@@ -381,11 +366,11 @@ const OrderTable = () => {
                                     {selectedOrder.orderDetails.length > 0 ? (
                                         selectedOrder.orderDetails.map((detail) => (
                                             <tr key={detail.id}>
-                                                <td>{detail.product?.name || 'Unknown Product'}</td>
+                                                <td>{detail.product?.name || 'Sản phẩm không xác định'}</td>
                                                 <td>
                                                     <img
                                                         src={detail.product?.imageUrl || 'https://via.placeholder.com/50'}
-                                                        alt={detail.product?.name || 'Product'}
+                                                        alt={detail.product?.name || 'Sản phẩm'}
                                                         style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                                                     />
                                                 </td>
@@ -393,15 +378,15 @@ const OrderTable = () => {
                                                 <td>{formatCurrency(detail.unitprice)}</td>
                                                 <td>{formatCurrency(detail.total)}</td>
                                                 <td>
-                                                   <a href={`/product/${detail.product?.id}`} >
-                                                       <button
-                                                           className="btn btn-sm btn-outline-info mr-1"
-                                                           title="Xem sản phẩm"
-                                                       >
-                                                           <i className="fa fa-eye"></i>
-                                                       </button>
-                                                   </a>
-                                                    <a   href={`/product/${detail.product?.id}`}   >
+                                                    <a href={`/product/${detail.product?.id}`}>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-info mr-1"
+                                                            title="Xem sản phẩm"
+                                                        >
+                                                            <i className="fa fa-eye"></i>
+                                                        </button>
+                                                    </a>
+                                                    <a href={`/product/${detail.product?.id}`}>
                                                         <button
                                                             className="btn btn-sm btn-outline-success"
                                                             title="Đánh giá sản phẩm"

@@ -10,7 +10,6 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,9 +22,10 @@ public class OrderService {
 
     @Autowired
     private UserRepository userRepository;
-@Autowired
+    @Autowired
     ProductRepository productRepository;
     // 1. Thêm đơn hàng mới
+    // Trong OrderService.java, sửa phương thức addOrder
     public Order addOrder(Order order, Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
@@ -33,27 +33,20 @@ public class OrderService {
         }
         User user = optionalUser.get();
         order.setUser(user);
-
         order.setOrderdate(LocalDateTime.now());
 
-        double totalOrder = 0;
-
+        // Không tính lại total, sử dụng total từ frontend
         if (order.getOrderDetails() != null) {
             for (OrderDetails detail : order.getOrderDetails()) {
                 Integer productId = detail.getProduct().getId();
                 Product product = productRepository.findById(productId)
                         .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
                 detail.setProduct(product);
-                double unitPrice = product.getPrice();
-                detail.setUnitprice(unitPrice);
-                double totalDetail = unitPrice * detail.getQuantity();
-                detail.setTotal(totalDetail);
+                detail.setUnitprice(product.getPrice());
+                detail.setTotal(product.getPrice() * detail.getQuantity());
                 detail.setOrder(order);
-                totalOrder += totalDetail;
             }
         }
-
-        order.setTotal(totalOrder);
 
         return orderRepository.save(order);
     }
