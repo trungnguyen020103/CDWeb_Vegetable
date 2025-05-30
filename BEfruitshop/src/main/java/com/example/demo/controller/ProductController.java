@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Product;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.service.I18nService;
 import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,16 +12,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
 @CrossOrigin(origins = "http://localhost:3000")
 public class ProductController {
+
     @Autowired
-    ProductService productService;
+    private ProductService productService;
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private I18nService i18nService;
 
     @GetMapping
     public Map<String, Object> getAllProducts(
@@ -62,9 +67,9 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable Integer id) {
+    public Product getProductById(@PathVariable Integer id, Locale locale) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException(i18nService.getMessage("product.not.found", new Object[]{id}, locale)));
     }
 
     @GetMapping("/category/{categoryId}")

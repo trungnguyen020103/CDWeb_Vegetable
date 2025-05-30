@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useTranslation } from 'react-i18next';
+import axios from '../../axiosConfig'; // Use custom axios
 import './Login.css';
 import { useToast } from '../../Toast/ToastContext';
+
 const Login = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [message, setMessage] = useState('');
     const [email, setEmail] = useState('');
@@ -13,14 +16,15 @@ const Login = () => {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const { showToast } = useToast();
+
     // Validate email
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email) {
-            setEmailError('Email không được để trống');
+            setEmailError(t('email_notblank'));
             return false;
         } else if (!re.test(email)) {
-            setEmailError('Email không đúng định dạng');
+            setEmailError(t('email_invalid'));
             return false;
         } else {
             setEmailError('');
@@ -31,16 +35,16 @@ const Login = () => {
     // Validate password
     const validatePassword = (password) => {
         if (!password) {
-            setPasswordError('Mật khẩu không được để trống');
+            setPasswordError(t('password_notblank'));
             return false;
-        } else if (password.length < 6) {
-            setPasswordError('Mật khẩu phải có ít nhất 6 ký tự');
+        } else if (password.length < 8) {
+            setPasswordError(t('password_invalid_format'));
             return false;
         } else if (!/[A-Z]/.test(password)) {
-            setPasswordError('Mật khẩu phải có ít nhất 1 chữ hoa');
+            setPasswordError(t('password_invalid_format'));
             return false;
         } else if (!/[\W_]/.test(password)) {
-            setPasswordError('Mật khẩu phải có ít nhất 1 ký tự đặc biệt');
+            setPasswordError(t('password_invalid_format'));
             return false;
         } else {
             setPasswordError('');
@@ -76,7 +80,8 @@ const Login = () => {
             });
 
             if (!response.data || !response.data.accessToken) {
-                setMessage('Phản hồi từ server không hợp lệ.');
+                setMessage(t('login_failed'));
+                showToast(t('login_failed'), 'error');
                 return;
             }
 
@@ -88,15 +93,15 @@ const Login = () => {
             localStorage.setItem('idUser', idUser);
             localStorage.setItem('tokenExpiration', Date.now() + expiration);
 
-            showToast('Đăng nhập thành công!', 'success');
+            showToast(t('login_success'), 'success');
             navigate('/profile');
         } catch (error) {
-            showToast('Đăng nhập thất bại!', 'error');
+            showToast(t('login_failed'), 'error');
             console.error('Login with Google failed:', error);
-            if (error.response) {
-                setMessage(error.response.data.message || 'Đăng nhập thất bại.');
+            if (error.response && error.response.data) {
+                setMessage(error.response.data || t('login_failed'));
             } else {
-                setMessage('Lỗi không xác định khi đăng nhập.');
+                setMessage(t('login_failed'));
             }
         }
     };
@@ -114,7 +119,8 @@ const Login = () => {
                 });
 
                 if (!response.data || !response.data.accessToken) {
-                    setMessage('Phản hồi từ server không hợp lệ.');
+                    setMessage(t('login_failed'));
+                    showToast(t('login_failed'), 'error');
                     return;
                 }
 
@@ -126,15 +132,15 @@ const Login = () => {
                 localStorage.setItem('idUser', idUser);
                 localStorage.setItem('tokenExpiration', Date.now() + expiration);
 
-                showToast('Đăng nhập thành công!', 'success');
+                showToast(t('login_success'), 'success');
                 navigate('/profile');
             } catch (error) {
-                showToast('Đăng nhập thất bại!', 'error');
+                showToast(t('login_failed'), 'error');
                 console.error('Login failed:', error);
-                if (error.response) {
-                    setMessage(error.response.data || 'Đăng nhập thất bại.');
+                if (error.response && error.response.data) {
+                    setMessage(error.response.data || t('login_failed'));
                 } else {
-                    setMessage('Lỗi không xác định khi đăng nhập.');
+                    setMessage(t('login_failed'));
                 }
             }
         }
@@ -145,8 +151,8 @@ const Login = () => {
             <div className="login-container">
                 <div className="login-card">
                     <div className="login-header">
-                        <h2>Đăng nhập</h2>
-                        <p className="login-subtitle">Chào mừng bạn quay trở lại!</p>
+                        <h2>{t('login')}</h2>
+                        <p className="login-subtitle">{t('welcome')}</p>
                     </div>
 
                     <div className="login-body">
@@ -156,12 +162,12 @@ const Login = () => {
                                     type="email"
                                     className={`form-control ${emailError ? 'is-invalid' : ''}`}
                                     id="emailInput"
-                                    placeholder="name@example.com"
+                                    placeholder={t('email_placeholder')}
                                     value={email}
                                     onChange={handleEmailChange}
                                     onBlur={() => email && validateEmail(email)}
                                 />
-                                <label htmlFor="emailInput">Email</label>
+                                <label htmlFor="emailInput">{t('email')}</label>
                                 {emailError && <div className="invalid-feedback">{emailError}</div>}
                             </div>
 
@@ -170,35 +176,38 @@ const Login = () => {
                                     type="password"
                                     className={`form-control ${passwordError ? 'is-invalid' : ''}`}
                                     id="passwordInput"
-                                    placeholder="Mật khẩu"
+                                    placeholder={t('password')}
                                     value={password}
                                     onChange={handlePasswordChange}
                                     onBlur={() => password && validatePassword(password)}
                                 />
-                                <label htmlFor="passwordInput">Mật khẩu</label>
+                                <label htmlFor="passwordInput">{t('password')}</label>
                                 {passwordError && <div className="invalid-feedback">{passwordError}</div>}
                             </div>
 
                             <div className="d-flex justify-content-end mb-4">
                                 <a href="/forgotPassword" className="forgot-password">
-                                    Quên mật khẩu?
+                                    {t('forgot_password')}
                                 </a>
                             </div>
 
                             <div className="d-grid gap-2 mb-4">
                                 <button type="submit" className="btn btn-primary login-btn">
-                                    Đăng nhập
+                                    {t('login')}
                                 </button>
                             </div>
 
                             <div className="separator">
-                                <span>hoặc</span>
+                                <span>{t('or')}</span>
                             </div>
 
                             <div className="google-login-container">
                                 <GoogleLogin
                                     onSuccess={handleLoginSuccess}
-                                    onError={() => console.log('Login Failed')}
+                                    onError={() => {
+                                        console.log('Login Failed');
+                                        showToast(t('login_failed'), 'error');
+                                    }}
                                     size="large"
                                     width="100%"
                                     text="signin_with"
@@ -215,7 +224,7 @@ const Login = () => {
 
                         <div className="register-link">
                             <p>
-                                Bạn chưa có tài khoản? <a href="/Register">Đăng ký ngay</a>
+                                {t('no_account')} <a href="/register">{t('register_now')}</a>
                             </p>
                         </div>
                     </div>
