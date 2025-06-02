@@ -31,16 +31,23 @@ const Payment = () => {
         return null;
     }
 
+    // Tùy chọn phương thức thanh toán
+    const paymentOptions = [
+        { value: 'COD', label: 'Thanh toán khi nhận hàng (COD)' },
+        { value: 'PAYPAL', label: 'Thanh toán qua PayPal' },
+        { value: 'VNPAY', label: 'Thanh toán qua VNPay' },
+    ];
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!userId) {
             showToast('Không tìm thấy ID người dùng. Vui lòng đăng nhập lại!', 'error');
-            navigate('/login'); // Chuyển hướng đến trang đăng nhập nếu không tìm thấy ID người dùng
+            navigate('/login');
             return;
         }
 
-        if (!shippingAddress) {
+        if (!shippingAddress.trim()) {
             showToast('Vui lòng nhập địa chỉ giao hàng!', 'error');
             return;
         }
@@ -64,6 +71,8 @@ const Payment = () => {
                 quantity: item.quantity,
             })),
         };
+
+        console.log('Sending order data to backend:', orderData);
 
         try {
             if (paymentMethod === 'COD') {
@@ -98,10 +107,27 @@ const Payment = () => {
                 } else {
                     throw new Error('Không nhận được URL xác nhận từ PayPal');
                 }
+            } else if (paymentMethod === 'VNPAY') {
+                const response = await axios.post(
+                    `http://localhost:8080/api/payment/vnpay/create-payment?userId=${userId}`,
+                    orderData,
+                    {
+                        headers: { 'Content-Type': 'application/json' },
+                    }
+                );
+                console.log('Received response from VNPay create-payment:', response.data);
+                const paymentUrl = response.data?.paymentUrl;
+                if (paymentUrl) {
+                    showToast('Đang chuyển hướng đến VNPay...', 'info');
+                    window.location.href = paymentUrl; // Chuyển hướng đến trang thanh toán VNPay
+                } else {
+                    throw new Error('Không nhận được URL thanh toán từ VNPay');
+                }
             }
         } catch (error) {
             console.error('Lỗi khi gửi đơn hàng:', error);
             const errorMessage =
+                error.response?.data?.error ||
                 error.response?.data?.message ||
                 'Không thể gửi đơn hàng. Vui lòng thử lại!';
             showToast(errorMessage, 'error');
@@ -148,8 +174,8 @@ const Payment = () => {
                                                 {product.name || 'Sản phẩm không xác định'}
                                             </a>
                                             <span className="header-cart-item-info">
-                        {product.quantity} x {(product.price || 0).toLocaleString()} VNĐ
-                      </span>
+                                                {product.quantity} x {(product.price || 0).toLocaleString()} VNĐ
+                                            </span>
                                         </div>
                                     </li>
                                 ))
@@ -232,8 +258,7 @@ const Payment = () => {
                                                     </td>
                                                     <td className="column-4">{product.quantity}</td>
                                                     <td className="column-5">
-                                                        {((product.price || 0) * (product.quantity || 0)).toLocaleString()}{' '}
-                                                        VNĐ
+                                                        {((product.price || 0) * (product.quantity || 0)).toLocaleString()} VNĐ
                                                     </td>
                                                 </tr>
                                             ))
@@ -298,20 +323,20 @@ const Payment = () => {
                                                     onChange={(e) => setNote(e.target.value)}
                                                 />
                                             </div>
-                                            {/*<div className="rs1-select2 rs2-select2 bor8 bg0 m-b-12">*/}
-                                            {/*    <Select*/}
-                                            {/*        value={paymentOptions.find(*/}
-                                            {/*            (option) => option.value === paymentMethod*/}
-                                            {/*        )}*/}
-                                            {/*        onChange={(selected) =>*/}
-                                            {/*            setPaymentMethod(selected?.value || 'COD')*/}
-                                            {/*        }*/}
-                                            {/*        options={paymentOptions}*/}
-                                            {/*        placeholder="Chọn phương thức thanh toán..."*/}
-                                            {/*        classNamePrefix="react-select"*/}
-                                            {/*        required*/}
-                                            {/*    />*/}
-                                            {/*</div>*/}
+                                            <div className="rs1-select2 rs2-select2 bor8 bg0 m-b-12">
+                                                <Select
+                                                    value={paymentOptions.find(
+                                                        (option) => option.value === paymentMethod
+                                                    )}
+                                                    onChange={(selected) =>
+                                                        setPaymentMethod(selected?.value || 'COD')
+                                                    }
+                                                    options={paymentOptions}
+                                                    placeholder="Chọn phương thức thanh toán..."
+                                                    classNamePrefix="react-select"
+                                                    required
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
