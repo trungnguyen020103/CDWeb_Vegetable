@@ -21,6 +21,7 @@ import AdminLayout from './AdminLayout';
 import Payment from './components/Payment/Payment';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
+import PaymentResult from './components/Payment/PaymentResult';
 
 const Layout = () => {
     console.log('Rendering Layout');
@@ -51,7 +52,9 @@ const router = createBrowserRouter([
             { path: 'profile', element: <Profile /> },
             { path: 'order', element: <OrderTable /> },
             { path: 'payment', element: <Payment /> },
-        ],
+            { path: 'payment-result', element: <PaymentResult /> },
+
+],
     },
     {
         path: '/admin',

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order")
@@ -23,12 +24,13 @@ public class OrderController {
     private I18nService i18nService;
 
     @PostMapping(value = "/add/user/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = "application/json")
-    public ResponseEntity<Order> createOrder(@RequestBody Order order, @PathVariable Long userId) {
+    public ResponseEntity<?> createOrder(@RequestBody Order order, @PathVariable Long userId, Locale locale) {
         try {
             Order savedOrder = orderService.addOrder(order, userId);
             return ResponseEntity.ok(savedOrder);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", i18nService.getMessage("order.create.failed", locale)));
         }
     }
 
