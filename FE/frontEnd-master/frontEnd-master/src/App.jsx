@@ -14,7 +14,7 @@ import ChangePassword from './components/ChangePassword/ChangePassword';
 import ForgotPassword from './components/ForgotPassword/ForgotPassword';
 import ChangePassWithCode from './components/ChangePassword/ChangPassWithCode';
 import ShoppingCart from './components/ShoppingCart/ShoppingCart';
-import { ToastProvider } from './Toast/ToastContext';
+import {ToastProvider, useToast} from './Toast/ToastContext';
 import OrderTable from './components/Order/OrderTable';
 import HomeAdmin from './components/Admin/HomeAdmin/HomeAdmin';
 import AdminLayout from './AdminLayout';
@@ -46,7 +46,7 @@ const router = createBrowserRouter([
             { path: 'register', element: <Register /> },
             { path: 'login', element: <Login /> },
             { path: 'changePassword', element: <ChangePassword /> },
-            { path: 'forgotPassword', element: <ChangePassword /> },
+            { path: 'forgotPassword', element: <ForgotPassword /> },
             { path: 'changewithcode', element: <ChangePassWithCode /> },
             { path: 'profile', element: <Profile /> },
             { path: 'order', element: <OrderTable /> },
@@ -61,19 +61,19 @@ const router = createBrowserRouter([
         ],
     },
 ]);
-
 function App() {
     return (
         <Provider store={store}>
-            <ToastProvider>
-                <I18nextProvider i18n={i18n}>
+            <I18nextProvider i18n={i18n}>
+                <ToastProvider>
                     <div className="App">
                         <RouterProvider router={router} />
                     </div>
-                </I18nextProvider>
-            </ToastProvider>
+                </ToastProvider>
+            </I18nextProvider>
         </Provider>
     );
 }
+
 
 export default App;

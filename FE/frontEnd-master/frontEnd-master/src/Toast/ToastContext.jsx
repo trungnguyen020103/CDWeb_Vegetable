@@ -1,31 +1,41 @@
+// ToastProvider.jsx
 import React, { createContext, useContext, useState } from 'react';
-import Toast from './Toast';
+import './Toast.css'; // import file css vừa tạo
 
 const ToastContext = createContext();
 
-export const useToast = () => useContext(ToastContext);
-
 export const ToastProvider = ({ children }) => {
-    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [toast, setToast] = useState({ message: '', type: '', visible: false });
 
     const showToast = (message, type = 'success') => {
-        setToast({ show: true, message, type });
+        setToast({ message, type, visible: true });
 
         setTimeout(() => {
-            setToast({ show: false, message: '', type });
-        }, 4000); // auto hide
-    };
-
-    const hideToast = () => {
-        setToast({ ...toast, show: false });
+            setToast(prev => ({ ...prev, visible: false }));
+        }, 4000);
     };
 
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            {toast.show && (
-                <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+            {toast.visible && (
+                <div className="toast-container">
+                    <div className="toast-header">
+                        <span className="toast-title">Thông báo</span>
+                        <div className="toast-header-right">
+                            <span className="toast-time">just now</span>
+                            <button className="toast-close" onClick={() => setToast(prev => ({ ...prev, visible: false }))}>
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                    <div className="toast-body">
+                        {toast.message}
+                    </div>
+                </div>
             )}
         </ToastContext.Provider>
     );
 };
+
+export const useToast = () => useContext(ToastContext);

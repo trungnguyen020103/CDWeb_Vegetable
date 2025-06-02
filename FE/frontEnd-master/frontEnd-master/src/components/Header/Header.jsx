@@ -98,7 +98,7 @@ const Header = () => {
 					<nav className="limiter-menu-desktop container">
 						<a href="/home" className="logo">
 							<img
-								src={`${process.env.PUBLIC_URL}/assets/images/icons/logo-01.png`}
+								src={`${process.env.PUBLIC_URL}/assets/images/logofruit.jpg`}
 								alt="IMG-LOGO"
 							/>
 						</a>

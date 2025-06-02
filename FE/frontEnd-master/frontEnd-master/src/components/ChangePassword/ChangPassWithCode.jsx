@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './changepasswithcode.css';
-
+import { useToast } from '../../Toast/ToastContext';
 const ChangePassWithCode = () => {
     const navigate = useNavigate();
-
+    const { showToast } = useToast();
     const [formData, setFormData] = useState({
         email: '',
         code: '',
@@ -75,6 +75,7 @@ const ChangePassWithCode = () => {
             }
 
             setErrors((prev) => ({ ...prev, form: 'Đổi mật khẩu thành công!' }));
+            showToast('Đổi mật khẩu thành công!', 'success');
             navigate('/login');
         } catch (error) {
             console.error('Change password failed:', error);
