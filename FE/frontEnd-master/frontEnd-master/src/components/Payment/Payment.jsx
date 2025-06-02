@@ -78,7 +78,7 @@ const Payment = () => {
                 if (response.status === 200 && response.data) {
                     showToast('Đặt hàng thành công!', 'success');
                     setTimeout(() => {
-                        navigate('/');
+                        navigate('/order');
                     }, 2000);
                 } else {
                     throw new Error('Phản hồi từ API không hợp lệ');

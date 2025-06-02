@@ -1,74 +1,69 @@
-.toast {
+.toast-container {
     position: fixed;
-    top: 20px; /* Adjusted for better spacing */
-    right: 20px;
-    padding: 12px 20px; /* Slightly tighter padding for a sleek look */
-    background-color: #2d2d2d; /* Darker, more modern neutral tone */
-    color: #ffffff;
-    border-radius: 10px; /* Softer corners */
-    z-index: 10000; /* Ensured visibility over other elements */
+    top: 30px;
+    right: 30px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    max-width: 450px;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-in-out;
+}
+
+.toast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to right, #28a745, #218838);
+    color: #fff;
+    padding: 8px 16px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.toast-title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.toast-header-right {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    min-width: 280px; /* Slightly wider for better content fit */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Deeper, softer shadow */
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Modern system font stack */
-    font-size: 14px; /* Readable text size */
-    line-height: 1.5; /* Better text readability */
-    animation: slideInOut 4.5s ease-in-out forwards; /* Smoother animation duration */
-    transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth hover transitions */
+    gap: 8px;
 }
 
-/* Success and error states with better contrast */
-.toast.success {
-    background-color: #2ecc71; /* Vibrant green */
-    border-left: 4px solid #27ae60; /* Accent border for emphasis */
+.toast-time {
+    font-size: 14px;
+    color: #e3ffe8;
 }
 
-.toast.error {
-    background-color: #e74c3c; /* Vibrant red */
-    border-left: 4px solid #c0392b; /* Accent border for emphasis */
-}
-
-/* Close button styling */
-.toast button {
+.toast-close {
     background: none;
-    color: #ffffff;
     border: none;
-    font-size: 16px; /* Slightly smaller for balance */
-    margin-left: 16px;
+    color: #fff;
+    font-size: 18px;
     cursor: pointer;
-    opacity: 0.7; /* Subtle default state */
-    transition: opacity 0.2s ease, transform 0.2s ease; /* Smooth hover effect */
+    padding: 0;
+    line-height: 1;
 }
 
-.toast button:hover {
-    opacity: 1; /* Full opacity on hover */
-    transform: scale(1.1); /* Subtle zoom effect */
+.toast-body {
+    padding: 16px 24px;
+    font-size: 18px;
+    color: #333;
+    line-height: 1.5;
 }
 
-/* Improved animation */
-@keyframes slideInOut {
-    0% {
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
         opacity: 0;
-        transform: translateY(-30px); /* Slide from slightly higher */
     }
-    15% {
+    to {
+        transform: translateX(0);
         opacity: 1;
-        transform: translateY(0);
     }
-    85% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-}
-
-/* Optional hover effect for the toast itself */
-.toast:hover {
-    transform: translateY(-2px); /* Slight lift */
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); /* Enhanced shadow on hover */
 }

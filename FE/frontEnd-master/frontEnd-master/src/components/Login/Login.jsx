@@ -93,7 +93,7 @@ const Login = () => {
             localStorage.setItem('idUser', idUser);
             localStorage.setItem('tokenExpiration', Date.now() + expiration);
 
-            showToast(t('login_success'), 'success');
+            showToast('Đăng nhập thành công', 'success');
             navigate('/profile');
         } catch (error) {
             showToast(t('login_failed'), 'error');
@@ -187,7 +187,7 @@ const Login = () => {
 
                             <div className="d-flex justify-content-end mb-4">
                                 <a href="/forgotPassword" className="forgot-password">
-                                    {t('forgot_password')}
+                                    {t('Quên mật khẩu')}
                                 </a>
                             </div>
 
@@ -224,7 +224,7 @@ const Login = () => {
 
                         <div className="register-link">
                             <p>
-                                {t('no_account')} <a href="/register">{t('register_now')}</a>
+                                {t('Chưa có tài khoản?')} <a href="/register">{t('Đăng ký ngay')}</a>
                             </p>
                         </div>
                     </div>

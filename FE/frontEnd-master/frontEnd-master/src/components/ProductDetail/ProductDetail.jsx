@@ -7,6 +7,7 @@ import {useDispatch} from "react-redux";
 import { useToast } from '../../Toast/ToastContext';
 export default function ProductDetail() {
     const { showToast } = useToast();
+    console.log('Toast context:', showToast);
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [quantity, setQuantity] = useState(1);
