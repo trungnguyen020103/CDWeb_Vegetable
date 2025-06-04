@@ -6,7 +6,15 @@ import './profile.css';
 const Profile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        id: '',
+        fullname: '',
+        address: '',
+        phonenumber: '',
+    });
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
 
@@ -18,6 +26,12 @@ const Profile = () => {
                 },
             });
             setUser(response.data);
+            setFormData({
+                id: response.data.id,
+                fullname: response.data.fullname || '',
+                address: response.data.address || '',
+                phonenumber: response.data.phonenumber || '',
+            });
         } catch (error) {
             console.error('Lỗi khi fetch user:', error);
             setError('Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
@@ -34,6 +48,48 @@ const Profile = () => {
             fetchUser();
         }
     }, [idUser, token, fetchUser, navigate]);
+
+    const handleInputChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleEditToggle = () => {
+        setIsEditing(!isEditing);
+        setError(null);
+        setSuccess(null);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const response = await axios.put(
+                'http://localhost:8080/user/update',
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setSuccess(response.data); // Thông báo thành công từ backend
+            setUser({ ...user, ...formData }); // Cập nhật thông tin hiển thị
+            setIsEditing(false); // Thoát chế độ chỉnh sửa
+        } catch (error) {
+            console.error('Lỗi khi cập nhật thông tin:', error);
+            if (error.response?.data) {
+                setError(
+                    typeof error.response.data === 'object'
+                        ? Object.values(error.response.data).join(', ')
+                        : error.response.data
+                );
+            } else {
+                setError('Cập nhật thông tin thất bại. Vui lòng thử lại.');
+            }
+        }
+    };
 
     const logout = () => {
         localStorage.removeItem('accessToken');
@@ -57,9 +113,7 @@ const Profile = () => {
         return <div className="text-center">Đang tải...</div>;
     }
 
-    const avatarUrl ='https://startbootstrap.github.io/startbootstrap-freelancer/assets/img/avataaars.svg';
-
-
+    const avatarUrl = 'https://startbootstrap.github.io/startbootstrap-freelancer/assets/img/avataaars.svg';
 
     return (
         <div>
@@ -86,9 +140,9 @@ const Profile = () => {
                                         <button
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
-                                            onClick={() => navigate('/edit-profile')}
+                                            onClick={handleEditToggle}
                                         >
-                                            Đổi thông tin
+                                            {isEditing ? 'Hủy' : 'Đổi thông tin'}
                                         </button>
                                         <button
                                             className="profile-button mt-2"
@@ -116,24 +170,82 @@ const Profile = () => {
                                         <div className="profile-info p-4">
                                             <h6>Thông Tin</h6>
                                             <hr className="mt-0 mb-4" />
-                                            <div className="row pt-1">
-                                                <div className="col-12 mb-6">
-                                                    <h6>Email</h6>
-                                                    <p className="text-muted">{user.email || 'N/A'}</p>
+                                            {isEditing ? (
+                                                <form onSubmit={handleSubmit}>
+                                                    <div className="row pt-1">
+                                                        <div className="col-12 mb-3">
+                                                            <label htmlFor="email" className="form-label">
+                                                                Email
+                                                            </label>
+                                                            <p className="text-muted">{user.email || 'N/A'}</p>
+                                                        </div>
+                                                        <div className="col-12 mb-3">
+                                                            <label htmlFor="fullname" className="form-label">
+                                                                Họ tên
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className="form-control"
+                                                                id="fullname"
+                                                                name="fullname"
+                                                                value={formData.fullname}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div className="col-12 mb-3">
+                                                            <label htmlFor="address" className="form-label">
+                                                                Địa chỉ
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className="form-control"
+                                                                id="address"
+                                                                name="address"
+                                                                value={formData.address}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </div>
+                                                        <div className="col-12 mb-3">
+                                                            <label htmlFor="phonenumber" className="form-label">
+                                                                Số điện thoại
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                className="form-control"
+                                                                id="phonenumber"
+                                                                name="phonenumber"
+                                                                value={formData.phonenumber}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </div>
+                                                        <div className="d-flex justify-content-start">
+                                                            <button type="submit" className="btn btn-primary me-2">
+                                                                Lưu
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            ) : (
+                                                <div className="row pt-1">
+                                                    <div className="col-12 mb-3">
+                                                        <h6>Email</h6>
+                                                        <p className="text-muted">{user.email || 'N/A'}</p>
+                                                    </div>
+                                                    <div className="col-6 mb-3">
+                                                        <h6>Họ tên</h6>
+                                                        <p className="text-muted">{user.fullname || 'N/A'}</p>
+                                                    </div>
+                                                    <div className="col-6 mb-3">
+                                                        <h6>Địa chỉ</h6>
+                                                        <p className="text-muted">{user.address || 'N/A'}</p>
+                                                    </div>
+                                                    <div className="col-6 mb-3">
+                                                        <h6>Số điện thoại</h6>
+                                                        <p className="text-muted">{user.phonenumber || 'N/A'}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="col-6 mb-3">
-                                                    <h6>Họ tên người dùng</h6>
-                                                    <p className="text-muted">{user.fullname}</p>
-                                                </div>
-                                                <div className="col-6 mb-3">
-                                                    <h6>Địa Chỉ</h6>
-                                                    <p className="text-muted">{user.address || 'N/A'}</p>
-                                                </div>
-                                                <div className="col-6 mb-3">
-                                                    <h6>Số Điện Thoại</h6>
-                                                    <p className="text-muted">{user.phonenumber || 'N/A'}</p>
-                                                </div>
-                                            </div>
+                                            )}
                                             <div className="d-flex justify-content-start">
                                                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
                                                     <i className="fab fa-facebook-f fa-lg me-3"></i>
