@@ -1,19 +1,25 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './ProductDetail.css';
-import {addToCart} from "../../store/Actions";
-import {useDispatch} from "react-redux";
+import { addToCart } from "../../store/Actions";
+import { useDispatch } from "react-redux";
 import { useToast } from '../../Toast/ToastContext';
+
 export default function ProductDetail() {
     const { showToast } = useToast();
-    console.log('Toast context:', showToast);
     const { id } = useParams();
+    const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [error, setError] = useState(null);
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState('');
     const dispatch = useDispatch();
-    // Fetch product details from backend
+    const idUser = localStorage.getItem('idUser');
+    const token = localStorage.getItem('accessToken');
+
+    // Fetch product details and comments
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -31,8 +37,19 @@ export default function ProductDetail() {
             }
         };
 
+        const fetchComments = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8080/api/comments/product/${id}`);
+                setComments(response.data);
+            } catch (err) {
+                console.error('Lỗi khi tải bình luận:', err);
+                showToast('Không thể tải bình luận', 'error');
+            }
+        };
+
         fetchProduct();
-    }, [id]);
+        fetchComments();
+    }, [id, showToast]);
 
     // Handle quantity increase
     const handleIncreaseQuantity = () => {
@@ -48,14 +65,75 @@ export default function ProductDetail() {
         }
     };
 
-    const handleAddToCart = (product, quantity ) => {
+    // Handle add to cart
+    const handleAddToCart = (product, quantity) => {
         if (!product || !product.id) {
-            console.error('Invalid product:', product);
+            showToast('Sản phẩm không hợp lệ', 'error');
             return;
         }
         dispatch(addToCart({ id: product.id, quantity }));
         setQuantity(1);
         showToast('Thêm sản phẩm thành công!', 'success');
+    };
+
+    // Handle comment submission
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault();
+        if (!token || !idUser) {
+            showToast('Vui lòng đăng nhập để bình luận', 'error');
+            navigate('/login');
+            return;
+        }
+        if (!newComment.trim()) {
+            showToast('Nội dung bình luận không được để trống', 'error');
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                'http://localhost:8080/api/comments',
+                {
+                    content: newComment,
+                    productId: parseInt(id),
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setNewComment('');
+            showToast(response.data.message || 'Bình luận đã được gửi và đang chờ duyệt', 'success');
+        } catch (err) {
+            const errorMessage =
+                err.response?.data && typeof err.response.data === 'object'
+                    ? Object.values(err.response.data).join(', ')
+                    : err.response?.data || 'Lỗi khi đăng bình luận';
+            showToast(errorMessage, 'error');
+            if (err.response?.status === 401) {
+                navigate('/login');
+            }
+        }
+    };
+
+    // Handle comment deletion
+    const handleDeleteComment = async (commentId) => {
+        try {
+            await axios.delete(`http://localhost:8080/api/comments/${commentId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setComments(comments.filter(comment => comment.id !== commentId));
+            showToast('Xóa bình luận thành công!', 'success');
+        } catch (err) {
+            const errorMessage =
+                err.response?.data || 'Lỗi khi xóa bình luận';
+            showToast(errorMessage, 'error');
+            if (err.response?.status === 401) {
+                navigate('/login');
+            }
+        }
     };
 
     if (error) {
@@ -81,18 +159,11 @@ export default function ProductDetail() {
 
                     {/* Product details and quantity selector */}
                     <div className="detail-product-details">
-                        {/* Product name */}
                         <h1 className="detail-product-name">{product.name}</h1>
-
-                        {/* Price */}
                         <div className="detail-product-price">{product.price.toLocaleString('vi-VN')}đ/1kg</div>
-
-                        {/* Stock */}
                         <div className="detail-product-stock">
                             <span>Còn {product.stock} sản phẩm</span>
                         </div>
-
-                        {/* Quantity selector */}
                         <div className="detail-quantity-section">
                             <label className="detail-quantity-label">Số lượng:</label>
                             <div className="detail-quantity-controls">
@@ -127,8 +198,6 @@ export default function ProductDetail() {
                                 </button>
                             </div>
                         </div>
-
-                        {/* Add to cart button */}
                         <button
                             className="detail-add-to-cart-btn"
                             onClick={() => handleAddToCart(product, quantity)}
@@ -142,7 +211,53 @@ export default function ProductDetail() {
                     {/* Product description */}
                     <div className="detail-product-description">
                         <h2>Mô tả sản phẩm</h2>
-                        <p>{product.description}</p>
+                        <p>{product.description || 'Chưa có mô tả.'}</p>
+                    </div>
+
+                    {/* Comment section */}
+                    <div className="detail-comment-section">
+                        <h2>Bình luận</h2>
+                        {token && idUser ? (
+                            <form onSubmit={handleCommentSubmit} className="detail-comment-form">
+                                <textarea
+                                    className="detail-comment-input"
+                                    placeholder="Viết bình luận của bạn..."
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                    maxLength={1000}
+                                />
+                                <button type="submit" className="detail-comment-submit-btn">
+                                    Gửi bình luận
+                                </button>
+                            </form>
+                        ) : (
+                            <p className="detail-comment-login-prompt">
+                                Vui lòng <a href="/login">đăng nhập</a> để bình luận.
+                            </p>
+                        )}
+                        <div className="detail-comment-list">
+                            {comments.length > 0 ? (
+                                comments.map(comment => (
+                                    <div key={comment.id} className="detail-comment-item">
+                                        <div className="detail-comment-header">
+                                            <span className="detail-comment-user">{comment.userFullname}</span>
+                                            <span className="detail-comment-time">{comment.createdAt}</span>
+                                            {comment.userId === parseInt(idUser) && (
+                                                <button
+                                                    className="detail-comment-delete-btn"
+                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                >
+                                                    Xóa
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="detail-comment-content">{comment.content}</p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>Chưa có bình luận nào.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
