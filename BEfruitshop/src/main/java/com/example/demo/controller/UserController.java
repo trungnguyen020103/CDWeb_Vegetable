@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ChangePassDto;
+import com.example.demo.dto.UpdateUserDto;
 import com.example.demo.model.User;
 import com.example.demo.service.CustomUserDetailsService;
 import com.example.demo.service.I18nService;
@@ -57,5 +58,26 @@ public class UserController {
 
         User updatedUser = customUserDetailsService.changePassword(changePassDto);
         return ResponseEntity.ok(i18nService.getMessage("change.password.success", locale));
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDto updateUserDto, BindingResult result, Locale locale) {
+        if (result.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            result.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), i18nService.getMessage(error.getDefaultMessage(), locale)));
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        try {
+            User updatedUser = customUserDetailsService.updateUser(updateUserDto);
+            return ResponseEntity.ok(i18nService.getMessage("user.update.success", locale));
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(i18nService.getMessage("user.not.found", new Object[]{updateUserDto.getId()}, locale));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(i18nService.getMessage("internal.server.error", locale));
+        }
     }
 }

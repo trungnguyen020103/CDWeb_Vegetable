@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.ChangePassDto;
+import com.example.demo.dto.UpdateUserDto;
 import com.example.demo.dto.UserSignUpDto;
 import com.example.demo.google.GoogleSignUpDto;
 import com.example.demo.model.User;
@@ -96,6 +97,17 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getPassword(),
                 authorities
         );
+    }
+
+    public User updateUser(UpdateUserDto updateUserDto) {
+        User user = userRepository.findById(updateUserDto.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với ID: " + updateUserDto.getId()));
+
+        user.setFullname(updateUserDto.getFullname());
+        user.setAddress(updateUserDto.getAddress());
+        user.setPhonenumber(updateUserDto.getPhonenumber());
+
+        return userRepository.save(user);
     }
 
 }
