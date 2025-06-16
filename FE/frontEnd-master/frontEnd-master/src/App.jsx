@@ -22,6 +22,8 @@ import Payment from './components/Payment/Payment';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import PaymentResult from './components/Payment/PaymentResult';
+import Unauthorized from "./components/Admin/Unauthorized/Unauthorized";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 const Layout = () => {
     console.log('Rendering Layout');
@@ -53,14 +55,23 @@ const router = createBrowserRouter([
             { path: 'order', element: <OrderTable /> },
             { path: 'payment', element: <Payment /> },
             { path: 'payment-result', element: <PaymentResult /> },
-
 ],
     },
     {
+        path: '/unauthorized',
+        element: <Unauthorized />,
+    },
+    {
         path: '/admin',
-        element: <AdminLayout />,
+        element: <ProtectedRoute allowedRoles={[0]} />, // Chỉ role 0 (admin) được vào
         children: [
-            { path: 'home', element: <HomeAdmin /> },
+            {
+                path: '',
+                element: <AdminLayout />,
+                children: [
+                    { path: 'manage', element: <HomeAdmin /> },
+                ],
+            },
         ],
     },
 ]);

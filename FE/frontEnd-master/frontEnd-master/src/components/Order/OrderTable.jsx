@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import './OrderTable.css';
 import axios from 'axios';
 
 const OrderTable = () => {
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
-    const [orders, setOrders] = useState([]); // Initialize as empty array
+    const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -17,6 +17,14 @@ const OrderTable = () => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
+    // State for review modal
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewData, setReviewData] = useState({
+        productId: null,
+        rating: 5,
+        comment: '',
+    });
+
     const fetchOrders = useCallback(async () => {
         if (!idUser || !token) {
             setError('Vui lòng đăng nhập để xem đơn hàng.');
@@ -27,7 +35,7 @@ const OrderTable = () => {
         setError(null);
         try {
             const response = await axios.get(`http://localhost:8080/api/order/get/user/${idUser}`, {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             const mappedOrders = response.data.map((order) => ({
                 id: order.id,
@@ -54,9 +62,6 @@ const OrderTable = () => {
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const ordersPerPage = 10;
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', {
@@ -133,13 +138,13 @@ const OrderTable = () => {
                     `http://localhost:8080/api/order/update/${orderToCancel}?status=4`,
                     {},
                     {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }
+                        headers: {Authorization: `Bearer ${token}`},
+                    },
                 );
                 setOrders(
                     orders.map((order) =>
-                        order.id === orderToCancel ? { ...order, status: 'Đã hủy' } : order
-                    )
+                        order.id === orderToCancel ? {...order, status: 'Đã hủy'} : order,
+                    ),
                 );
             } catch (error) {
                 console.error('Lỗi khi hủy đơn hàng:', error);
@@ -164,6 +169,57 @@ const OrderTable = () => {
         setShowDetailsModal(false);
         setSelectedOrder(null);
     };
+
+    const handleReviewProduct = (productId) => {
+        setReviewData({
+            productId: productId,
+            rating: 5,
+            comment: '',
+        });
+        setShowReviewModal(true);
+    };
+
+    const closeReviewModal = () => {
+        setShowReviewModal(false);
+        setReviewData({
+            productId: null,
+            rating: 5,
+            comment: '',
+        });
+    };
+
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const reviewDto = {
+                productId: reviewData.productId,
+                userId: parseInt(idUser),
+                rating: parseInt(reviewData.rating),
+                comment: reviewData.comment,
+                date: new Date().toISOString(), // Gửi thời gian hiện tại
+            };
+            await axios.post(
+                'http://localhost:8080/user/review/create',
+                reviewDto,
+                {
+                    headers: {Authorization: `Bearer ${token}`},
+                },
+            );
+            alert('Đánh giá sản phẩm thành công!');
+            closeReviewModal();
+        } catch (error) {
+            console.error('Lỗi khi gửi đánh giá:', error);
+            alert('Không thể gửi đánh giá. Vui lòng thử lại.');
+        }
+    };
+
+    const handleReviewInputChange = (e) => {
+        const {name, value} = e.target;
+        setReviewData((prev) => ({...prev, [name]: value}));
+    };
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const ordersPerPage = 10;
 
     const indexOfLastOrder = currentPage * ordersPerPage;
     const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
@@ -247,10 +303,10 @@ const OrderTable = () => {
                                         <span className="total-text">{formatCurrency(order.total)}</span>
                                     </td>
                                     <td>
-                                        <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                                            <i className={`fa ${getStatusIcon(order.status)} mr-1`}></i>
-                                            {order.status}
-                                        </span>
+                                            <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                                                <i className={`fa ${getStatusIcon(order.status)} mr-1`}></i>
+                                                {order.status}
+                                            </span>
                                     </td>
                                     <td>
                                         <div className="action-buttons">
@@ -263,13 +319,14 @@ const OrderTable = () => {
                                             </button>
                                             {order.status === 'Đang xử lý' && (
                                                 <button
-                                                    className="btn btn-sm btn-outline-danger"
+                                                    className="btn btn-sm btn-outline-danger mr-1"
                                                     title="Hủy đơn hàng"
                                                     onClick={() => handleCancelOrder(order.id)}
                                                 >
                                                     <i className="fa fa-times"></i>
                                                 </button>
                                             )}
+
                                         </div>
                                     </td>
                                 </tr>
@@ -369,9 +426,16 @@ const OrderTable = () => {
                                                 <td>{detail.product?.name || 'Sản phẩm không xác định'}</td>
                                                 <td>
                                                     <img
-                                                        src={detail.product?.imageUrl || 'https://via.placeholder.com/50'}
+                                                        src={
+                                                            detail.product?.imageUrl ||
+                                                            'https://via.placeholder.com/50'
+                                                        }
                                                         alt={detail.product?.name || 'Sản phẩm'}
-                                                        style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                                                        style={{
+                                                            width: '50px',
+                                                            height: '50px',
+                                                            objectFit: 'cover',
+                                                        }}
                                                     />
                                                 </td>
                                                 <td>{detail.quantity}</td>
@@ -386,20 +450,21 @@ const OrderTable = () => {
                                                             <i className="fa fa-eye"></i>
                                                         </button>
                                                     </a>
-                                                    <a href={`/product/${detail.product?.id}`}>
+                                                    {selectedOrder.status === 'Đã giao' && (
                                                         <button
                                                             className="btn btn-sm btn-outline-success"
                                                             title="Đánh giá sản phẩm"
+                                                            onClick={() => handleReviewProduct(detail.product?.id)}
                                                         >
                                                             <i className="fa fa-star"></i>
                                                         </button>
-                                                    </a>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="5" className="text-center">
+                                            <td colSpan="6" className="text-center">
                                                 Không có sản phẩm chi tiết
                                             </td>
                                         </tr>
@@ -412,6 +477,67 @@ const OrderTable = () => {
                             <button className="btn btn-secondary btn-sm" onClick={closeDetailsModal}>
                                 Đóng
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Review Modal */}
+            {showReviewModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5>Đánh Giá Sản Phẩm</h5>
+                            <button className="modal-close-btn" onClick={closeReviewModal}>
+                                <i className="fa fa-times"></i>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <form onSubmit={handleReviewSubmit}>
+                                <div className="form-group">
+                                    <label htmlFor="rating">Điểm đánh giá</label>
+                                    <div className="star-rating">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <span
+                                                key={star}
+                                                onClick={() => setReviewData({...reviewData, rating: star})}
+                                                style={{
+                                                    cursor: 'pointer',
+                                                    fontSize: '1.5rem',
+                                                    color: star <= reviewData.rating ? '#ffc107' : '#e4e5e9',
+                                                }}
+                                            >
+                ★
+            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="comment">Nhận xét</label>
+                                    <textarea
+                                        id="comment"
+                                        name="comment"
+                                        value={reviewData.comment}
+                                        onChange={handleReviewInputChange}
+                                        className="form-control"
+                                        rows="4"
+                                        placeholder="Nhập nhận xét của bạn..."
+                                    ></textarea>
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary btn-sm"
+                                        onClick={closeReviewModal}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button type="submit" className="btn btn-primary btn-sm">
+                                        Gửi đánh giá
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

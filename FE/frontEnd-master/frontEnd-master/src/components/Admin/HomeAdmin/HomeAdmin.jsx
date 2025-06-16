@@ -5,6 +5,8 @@ import ProductManagement from '../TableManagement/ProductManagement';
 import CategoryManagement from '../TableManagement/CategoryManagement';
 import Dashboard from './Dashboard';
 import CommentManagement from '../TableManagement/CommentManagement';
+import ReviewManagement from "../TableManagement/ReviewManagement";
+import OrderManagement from "../TableManagement/OrderManagement";
 
 const HomeAdmin = () => {
     const [activeView, setActiveView] = useState('dashboard'); // State to manage active view
@@ -61,6 +63,19 @@ const HomeAdmin = () => {
                             <li className="home-admin-nav-item nav-item mb-2">
                                 <a
                                     href="#"
+                                    className={`home-admin-nav-link nav-link text-dark d-flex align-items-center ${activeView === 'orders' ? 'active' : ''}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleViewChange('orders');
+                                    }}
+                                >
+                                    <i className="fa fa-comments mr-3"></i>
+                                    Order Management
+                                </a>
+                            </li>
+                            <li className="home-admin-nav-item nav-item mb-2">
+                                <a
+                                    href="#"
                                     className={`home-admin-nav-link nav-link text-dark d-flex align-items-center ${activeView === 'products' ? 'active' : ''}`}
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -97,6 +112,19 @@ const HomeAdmin = () => {
                                     Comment Management
                                 </a>
                             </li>
+                            <li className="home-admin-nav-item nav-item mb-2">
+                                <a
+                                    href="#"
+                                    className={`home-admin-nav-link nav-link text-dark d-flex align-items-center ${activeView === 'review' ? 'active' : ''}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleViewChange('reviews');
+                                    }}
+                                >
+                                    <i className="fa fa-comments mr-3"></i>
+                                    Review Management
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -106,6 +134,8 @@ const HomeAdmin = () => {
                     {activeView === 'products' && <ProductManagement />}
                     {activeView === 'categories' && <CategoryManagement />}
                     {activeView === 'comments' && <CommentManagement />}
+                    {activeView === 'reviews' && <ReviewManagement />}
+                    {activeView === 'orders' && <OrderManagement />}
                 </div>
             </div>
         </div>

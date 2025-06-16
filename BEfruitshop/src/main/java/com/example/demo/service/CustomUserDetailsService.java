@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.ChangePassDto;
+import com.example.demo.dto.EditUserDto;
 import com.example.demo.dto.UpdateUserDto;
 import com.example.demo.dto.UserSignUpDto;
 import com.example.demo.google.GoogleSignUpDto;
@@ -74,7 +75,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return userRepository.save(user);
     }
-
+    public User updateUserFromSignUpDto(Long id, EditUserDto dto) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setEmail(dto.getEmail());
+            user.setFullname(dto.getFullname());
+            user.setAddress(dto.getAddress());
+            user.setPhonenumber(dto.getPhonenumber());
+            return userRepository.save(user);
+        }
+        return null;
+    }
     public boolean deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             return false;
@@ -109,5 +121,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return userRepository.save(user);
     }
+    public User changeUserRole(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
+        // Đảo vai trò: 0 (Admin) ↔ 1 (User)
+        int newRole = user.getRole() == 0 ? 1 : 0;
+        user.setRole(newRole);
+
+        return userRepository.save(user);
+    }
 }

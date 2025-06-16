@@ -18,7 +18,7 @@ export default function ProductDetail() {
     const dispatch = useDispatch();
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
-
+    const [reviews, setReviews] = useState([]);
     // Fetch product details and comments
     useEffect(() => {
         const fetchProduct = async () => {
@@ -46,7 +46,23 @@ export default function ProductDetail() {
                 showToast('Không thể tải bình luận', 'error');
             }
         };
-
+        const fetchReviews = async () => {
+            try {
+                const response = await axios.get(
+                    `http://localhost:8080/user/review/product/${id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                setReviews(response.data);
+            } catch (err) {
+                console.error('Lỗi khi tải đánh giá:', err);
+                showToast('Không thể tải đánh giá', 'error');
+            }
+        };
+        fetchReviews();
         fetchProduct();
         fetchComments();
     }, [id, showToast]);
@@ -143,6 +159,18 @@ export default function ProductDetail() {
     if (!product) {
         return <div className="detail-loading-message">Đang tải...</div>;
     }
+    const renderStars = (rating) => {
+        return (
+            <div className="detail-review-stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                        key={star}
+                        className={`fa fa-star ${star <= rating ? 'checked' : ''}`}
+                    ></span>
+                ))}
+            </div>
+        );
+    };
 
     return (
         <div className="product-detail-container">
@@ -212,6 +240,32 @@ export default function ProductDetail() {
                     <div className="detail-product-description">
                         <h2>Mô tả sản phẩm</h2>
                         <p>{product.description || 'Chưa có mô tả.'}</p>
+                    </div>
+                    {/* Review section */}
+                    <div className="scrollable-review-frame">
+                        <div className="detail-review-section">
+                            <h2>Đánh giá sản phẩm</h2>
+                            <div className="detail-review-list">
+                                {reviews.length > 0 ? (
+                                    reviews.map((review) => (
+                                        <div key={review.id} className="detail-review-item">
+                                            <div className="detail-review-header">
+                                                <span className="detail-review-user">Người dùng #{review.userId}</span>
+                                                <span className="detail-review-time">
+                                {new Date(review.date).toLocaleString('vi-VN')}
+                            </span>
+                                            </div>
+                                            <div className="detail-review-rating">
+                                                {renderStars(review.rating)}
+                                            </div>
+                                            <p className="detail-review-content">{review.comment}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>Chưa có đánh giá nào.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Comment section */}

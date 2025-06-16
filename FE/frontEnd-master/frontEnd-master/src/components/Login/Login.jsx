@@ -16,7 +16,8 @@ const Login = () => {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const { showToast } = useToast();
-
+const [role, setRole] = useState('');
+const [user, setUser] = useState({});
     // Validate email
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -72,7 +73,6 @@ const Login = () => {
         }
     };
 
-    // Handle Google login success
     const handleLoginSuccess = async (credentialResponse) => {
         try {
             const response = await axios.post('http://localhost:8080/auth/login/google', {
@@ -87,11 +87,32 @@ const Login = () => {
 
             const { accessToken, refreshToken, expiration, tokenType, idUser } = response.data;
 
+            // Lưu thông tin token
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('tokenType', tokenType);
             localStorage.setItem('idUser', idUser);
             localStorage.setItem('tokenExpiration', Date.now() + expiration);
+
+            // Lấy token và idUser để gọi API
+            const token = localStorage.getItem("accessToken");
+            const userId = localStorage.getItem("idUser");
+
+            // Gọi API lấy thông tin user
+            const userRes = await axios.get(`http://localhost:8080/user/getbyid/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const user = userRes.data;
+            const role = user.role;
+
+            // Lưu vào localStorage
+            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("role", role);
+
+            console.log("Lấy thông tin user thành công:", user);
 
             showToast('Đăng nhập thành công', 'success');
             navigate('/profile');
@@ -105,6 +126,7 @@ const Login = () => {
             }
         }
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
