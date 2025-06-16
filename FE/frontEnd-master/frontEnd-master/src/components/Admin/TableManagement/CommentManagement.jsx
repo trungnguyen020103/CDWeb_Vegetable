@@ -1,18 +1,69 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 
 const CommentManagement = () => {
-    const data = [
-        { id: 1, user: 'John Doe', comment: 'Great product!', date: '2025-05-27' },
-        { id: 2, user: 'Jane Smith', comment: 'Nice service.', date: '2025-05-26' },
-        { id: 3, user: 'Sam Wilson', comment: 'Could be better.', date: '2025-05-25' },
-    ];
+    const [comments, setComments] = useState([]);
+    const dataTableInitialized = useRef(false); // đánh dấu đã khởi tạo DataTable
+    const token = localStorage.getItem('accessToken');
 
     useEffect(() => {
-        // Chờ DOM load xong rồi gọi DataTable
-        const script = document.createElement("script");
-        script.innerHTML = `$(document).ready(function () { $('#commentTable').DataTable(); });`;
-        document.body.appendChild(script);
+        const fetchComments = async () => {
+            try {
+                const response = await axios.get('http://localhost:8080/admin/comment/getall', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setComments(response.data);
+            } catch (error) {
+                console.error('Lỗi khi fetch comment:', error);
+            }
+        };
+
+        fetchComments();
     }, []);
+    const handleDelete = async (commentId) => {
+        try {
+            await axios.delete(`http://localhost:8080/admin/comment/delete/${commentId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setComments(prev => prev.filter(item => item.id !== commentId));
+        } catch (err) {
+            console.error("Lỗi xoá comment:", err);
+            alert(err.response?.data || "Không thể xoá comment");
+        }
+    };
+    const handleStatusChange = async (commentId, newStatus) => {
+        try {
+            await axios.put(`http://localhost:8080/admin/comment/update-status/${commentId}`, {
+                status: newStatus
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            setComments(prevComments =>
+                prevComments.map(comment =>
+                    comment.id === commentId ? { ...comment, status: newStatus } : comment
+                )
+            );
+        } catch (error) {
+            console.error('Lỗi cập nhật trạng thái:', error);
+            alert("Không thể cập nhật trạng thái.");
+        }
+    };
+
+    useEffect(() => {
+        if (comments.length > 0 && !dataTableInitialized.current) {
+            const script = document.createElement("script");
+            script.innerHTML = `$(document).ready(function () { $('#commentTable').DataTable(); });`;
+            document.body.appendChild(script);
+            dataTableInitialized.current = true;
+        }
+    }, [comments]);
 
     return (
         <div className="container mt-4">
@@ -27,15 +78,39 @@ const CommentManagement = () => {
                                 <th>User</th>
                                 <th>Comment</th>
                                 <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {data.map((item) => (
+                            {comments.map((item) => (
                                 <tr key={item.id}>
                                     <td>{item.id}</td>
-                                    <td>{item.user}</td>
-                                    <td>{item.comment}</td>
-                                    <td>{item.date}</td>
+                                    <td>{item.userFullname}</td>
+                                    <td>{item.content}</td>
+                                    <td>{item.createdAt}</td>
+                                    <td>
+                                        <select
+                                            value={item.status}
+                                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                            className="form-select form-select-sm"
+                                        >
+                                            <option value="PENDING">PENDING</option>
+                                            <option value="APPROVED">APPROVED</option>
+                                            <option value="REJECTED">REJECTED</option>
+                                        </select>
+                                    </td>
+
+                                    <td>
+                                        <button
+                                            onClick={() => handleDelete(item.id)}
+                                            className="btn btn-sm btn-danger"
+                                            title="Delete"
+                                        >
+                                            <i className="fas fa-trash-alt"></i>
+                                        </button>
+
+                                    </td>
                                 </tr>
                             ))}
                             </tbody>

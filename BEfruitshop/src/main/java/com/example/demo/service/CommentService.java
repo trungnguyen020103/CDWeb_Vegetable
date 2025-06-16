@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,6 +71,23 @@ public class CommentService {
             return dto;
         }).collect(Collectors.toList());
     }
+    public List<CommentDto> getAllComments() {
+        List<Comment> comments = commentRepository.findAll();
+        List<CommentDto> result = new ArrayList<>();
+
+        for (Comment comment : comments) {
+            CommentDto dto = new CommentDto();
+            dto.setId(comment.getId());
+            dto.setContent(comment.getContent());
+            dto.setUserFullname(comment.getUser().getFullname());
+            dto.setUserId(comment.getUser().getId());
+            dto.setProductId(comment.getProduct().getId());
+            dto.setCreatedAt(comment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+            dto.setStatus(comment.getStatus().name());
+            result.add(dto);
+        }
+        return result;
+    }
 
     public void deleteComment(Long commentId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -84,5 +102,18 @@ public class CommentService {
         }
 
         commentRepository.delete(comment);
+    }
+    public void deleteCommentAsAdmin(Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        commentRepository.delete(comment);
+    }
+    public void updateStatus(Long commentId, String status) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        comment.setStatus(Comment.CommentStatus.valueOf(status));
+        commentRepository.save(comment);
     }
 }

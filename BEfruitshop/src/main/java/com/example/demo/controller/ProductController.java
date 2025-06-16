@@ -76,4 +76,5 @@ public class ProductController {
     public List<Product> getProductsByCategory(@PathVariable Integer categoryId) {
         return productService.getProductsByCategoryId(categoryId);
     }
+
 }
