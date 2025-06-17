@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './profile.css';
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -33,13 +35,13 @@ const Profile = () => {
                 phonenumber: response.data.phonenumber || '',
             });
         } catch (error) {
-            console.error('Lỗi khi fetch user:', error);
-            setError('Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
+            console.error('Error fetching user:', error);
+            setError(t('user_error'));
             if (error.response?.status === 401) {
                 navigate('/login');
             }
         }
-    }, [idUser, token, navigate]);
+    }, [idUser, token, navigate, t]);
 
     useEffect(() => {
         if (!idUser || !token) {
@@ -74,11 +76,11 @@ const Profile = () => {
                     },
                 }
             );
-            setSuccess(response.data); // Thông báo thành công từ backend
-            setUser({ ...user, ...formData }); // Cập nhật thông tin hiển thị
-            setIsEditing(false); // Thoát chế độ chỉnh sửa
+            setSuccess(t('update_success'));
+            setUser({ ...user, ...formData });
+            setIsEditing(false);
         } catch (error) {
-            console.error('Lỗi khi cập nhật thông tin:', error);
+            console.error('Error updating information:', error);
             if (error.response?.data) {
                 setError(
                     typeof error.response.data === 'object'
@@ -86,7 +88,7 @@ const Profile = () => {
                         : error.response.data
                 );
             } else {
-                setError('Cập nhật thông tin thất bại. Vui lòng thử lại.');
+                setError(t('update_error'));
             }
         }
     };
@@ -110,7 +112,7 @@ const Profile = () => {
     }
 
     if (!user) {
-        return <div className="text-center">Đang tải...</div>;
+        return <div className="text-center">{t('loading_user')}</div>;
     }
 
     const avatarUrl = 'https://startbootstrap.github.io/startbootstrap-freelancer/assets/img/avataaars.svg';
@@ -136,52 +138,52 @@ const Profile = () => {
                                             className="img-fluid my-5"
                                             style={{ width: '80px' }}
                                         />
-                                        <h5 className="profile-username">{user.fullname || 'N/A'}</h5>
+                                        <h5 className="profile-username">{user.fullname || t('not_available')}</h5>
                                         <button
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
                                             onClick={handleEditToggle}
                                         >
-                                            {isEditing ? 'Hủy' : 'Đổi thông tin'}
+                                            {isEditing ? t('cancel') : t('change_info')}
                                         </button>
                                         <button
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
                                             onClick={() => navigate('/changePassword')}
                                         >
-                                            Đổi Mật Khẩu
+                                            {t('change_password')}
                                         </button>
                                         <button
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
                                             onClick={() => navigate('/order')}
                                         >
-                                            Thông tin đơn hàng
+                                            {t('order_info')}
                                         </button>
                                         <button
                                             className="profile-button mt-2"
                                             style={{ backgroundColor: '#E9FF97' }}
                                             onClick={logout}
                                         >
-                                            Đăng xuất
+                                            {t('logout')}
                                         </button>
                                     </div>
                                     <div className="col-md-8">
                                         <div className="profile-info p-4">
-                                            <h6>Thông Tin</h6>
+                                            <h6>{t('information')}</h6>
                                             <hr className="mt-0 mb-4" />
                                             {isEditing ? (
                                                 <form onSubmit={handleSubmit}>
                                                     <div className="row pt-1">
                                                         <div className="col-12 mb-3">
                                                             <label htmlFor="email" className="form-label">
-                                                                Email
+                                                                {t('email_label')}
                                                             </label>
-                                                            <p className="text-muted">{user.email || 'N/A'}</p>
+                                                            <p className="text-muted">{user.email || t('not_available')}</p>
                                                         </div>
                                                         <div className="col-12 mb-3">
                                                             <label htmlFor="fullname" className="form-label">
-                                                                Họ tên
+                                                                {t('fullname_label')}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -195,7 +197,7 @@ const Profile = () => {
                                                         </div>
                                                         <div className="col-12 mb-3">
                                                             <label htmlFor="address" className="form-label">
-                                                                Địa chỉ
+                                                                {t('address_label')}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -208,7 +210,7 @@ const Profile = () => {
                                                         </div>
                                                         <div className="col-12 mb-3">
                                                             <label htmlFor="phonenumber" className="form-label">
-                                                                Số điện thoại
+                                                                {t('phone_label')}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -221,7 +223,7 @@ const Profile = () => {
                                                         </div>
                                                         <div className="d-flex justify-content-start">
                                                             <button type="submit" className="btn btn-primary me-2">
-                                                                Lưu
+                                                                {t('save')}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -229,20 +231,20 @@ const Profile = () => {
                                             ) : (
                                                 <div className="row pt-1">
                                                     <div className="col-12 mb-3">
-                                                        <h6>Email</h6>
-                                                        <p className="text-muted">{user.email || 'N/A'}</p>
+                                                        <h6>{t('email_label')}</h6>
+                                                        <p className="text-muted">{user.email || t('not_available')}</p>
                                                     </div>
                                                     <div className="col-6 mb-3">
-                                                        <h6>Họ tên</h6>
-                                                        <p className="text-muted">{user.fullname || 'N/A'}</p>
+                                                        <h6>{t('fullname_label')}</h6>
+                                                        <p className="text-muted">{user.fullname || t('not_available')}</p>
                                                     </div>
                                                     <div className="col-6 mb-3">
-                                                        <h6>Địa chỉ</h6>
-                                                        <p className="text-muted">{user.address || 'N/A'}</p>
+                                                        <h6>{t('address_label')}</h6>
+                                                        <p className="text-muted">{user.address || t('not_available')}</p>
                                                     </div>
                                                     <div className="col-6 mb-3">
-                                                        <h6>Số điện thoại</h6>
-                                                        <p className="text-muted">{user.phonenumber || 'N/A'}</p>
+                                                        <h6>{t('phone_label')}</h6>
+                                                        <p className="text-muted">{user.phonenumber || t('not_available')}</p>
                                                     </div>
                                                 </div>
                                             )}

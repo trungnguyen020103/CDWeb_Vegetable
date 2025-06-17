@@ -5,10 +5,12 @@ import axios from 'axios';
 import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/Actions';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../Toast/ToastContext';
+
 const ProductList = () => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
-    // const cart = useSelector(state => state.cart) || [];
     const { showToast } = useToast();
     const [products, setProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -29,13 +31,13 @@ const ProductList = () => {
                 setCategories(response.data);
             } else {
                 console.error('Categories data is not an array:', response.data);
-                setError('Dữ liệu danh mục không hợp lệ.');
+                setError(t('invalid_category_data'));
             }
         } catch (error) {
             console.error('Error fetching categories:', error.message);
-            setError('Không thể tải danh mục.');
+            setError(t('error_loading_categories'));
         }
-    }, []);
+    }, [t]);
 
     const fetchProducts = useCallback(async () => {
         setIsLoading(true);
@@ -55,16 +57,16 @@ const ProductList = () => {
                 setTotalPages(response.data.totalPages || 1);
             } else {
                 console.error('Products content is not an array:', response.data);
-                setError('Dữ liệu sản phẩm không hợp lệ.');
+                setError(t('invalid_product_data'));
             }
         } catch (error) {
             console.error('Error fetching products:', error.message);
-            setError('Không thể tải sản phẩm. Vui lòng thử lại.');
+            setError(t('error_loading'));
         } finally {
             setIsLoading(false);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }, [currentPage, searchQuery, selectedCategory, sortOption]);
+    }, [currentPage, searchQuery, selectedCategory, sortOption, t]);
 
     useEffect(() => {
         fetchCategories();
@@ -74,7 +76,7 @@ const ProductList = () => {
     const formatPrice = (price) => {
         if (typeof price !== 'number' && typeof price !== 'string') {
             console.error('Invalid price:', price);
-            return 'N/A';
+            return t('not_available');
         }
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
@@ -87,20 +89,23 @@ const ProductList = () => {
             setCurrentPage(page);
         }
     };
+
     const handleAddToCart = (product, quantity = 1) => {
         if (!product || !product.id) {
             console.error('Invalid product:', product);
+            showToast(t('invalid_product_data'), 'error');
             return;
         }
         dispatch(addToCart({ id: product.id, quantity }));
-        showToast('Thêm sản phẩm thành công!', 'success');
+        showToast(t('add_to_cart_success'), 'success');
     };
 
     const handleAddToWishlist = (product) => {
         if (product && product.name) {
-            alert(`Đã thêm ${product.name} vào danh sách yêu thích!`);
+            showToast(t('add_to_wishlist_success', { name: product.name }), 'success');
         } else {
             console.error('Invalid product:', product);
+            showToast(t('invalid_product_data'), 'error');
         }
     };
 
@@ -130,29 +135,29 @@ const ProductList = () => {
                     <span className="search-icon">🔍</span>
                     <input
                         type="text"
-                        placeholder="Tìm kiếm sản phẩm (VD: Rau)..."
+                        placeholder={t('search_placeholder')}
                         value={searchQuery}
                         onChange={handleSearch}
-                        aria-label="Tìm kiếm sản phẩm"
+                        aria-label={t('search_products')}
                     />
                 </div>
                 <div className="header-icons">
                     <a href="/shoppingCart">
-                        <button className="icon-btn" aria-label="Xem giỏ hàng">
+                        <button className="icon-btn" aria-label={t('view_cart')}>
                             <span className="cart-icon">🛒</span>
-                            <span className="icon-label">Giỏ hàng</span>
+                            <span className="icon-label">{t('cart_label')}</span>
                         </button>
                     </a>
-                    <button className="icon-btn" aria-label="Xem danh sách yêu thích">
+                    <button className="icon-btn" aria-label={t('view_wishlist')}>
                         <span className="heart-icon">❤️</span>
-                        <span className="icon-label">Yêu thích</span>
+                        <span className="icon-label">{t('wishlist_label')}</span>
                     </button>
                 </div>
             </div>
 
             <div className="filter-controls">
-                <select onChange={handleCategoryChange} value={selectedCategory} aria-label="Chọn danh mục">
-                    <option value="">Tất cả danh mục</option>
+                <select onChange={handleCategoryChange} value={selectedCategory} aria-label={t('select_category')}>
+                    <option value="">{t('all_categories')}</option>
                     {categories.map((category) => {
                         if (!category || typeof category !== 'object' || !category.id || !category.name) {
                             console.error('Invalid category:', category);
@@ -165,25 +170,24 @@ const ProductList = () => {
                         );
                     })}
                 </select>
-                <select onChange={handleSortChange} value={sortOption} aria-label="Chọn cách sắp xếp">
-                    <option value="">Sắp xếp</option>
-                    <option value="best_selling">Bán chạy</option>
-                    <option value="price_asc">Giá: Thấp đến Cao</option>
-                    <option value="price_desc">Giá: Cao đến Thấp</option>
-                    <option value="discount">Khuyến mãi</option>
+                <select onChange={handleSortChange} value={sortOption} aria-label={t('select_sort')}>
+                    <option value="">{t('sort_by')}</option>
+                    <option value="best_selling">{t('best_selling')}</option>
+                    <option value="price_asc">{t('price_asc')}</option>
+                    <option value="price_desc">{t('price_desc')}</option>
+                    <option value="discount">{t('discount')}</option>
                 </select>
             </div>
 
-            <h1 className="product-list-title">Rau Củ Hữu Cơ</h1>
+            <h1 className="product-list-title">{t('organic_vegetables')}</h1>
 
-            {isLoading && <p className="loading-message">Đang tải sản phẩm...</p>}
+            {isLoading && <p className="loading-message">{t('loading_products')}</p>}
             {error && <p className="error-message">{error}</p>}
             {!isLoading && products.length === 0 && !error && (
-                <p>Không tìm thấy sản phẩm nào phù hợp.</p>
+                <p>{t('no_products_found')}</p>
             )}
 
             <div className="product-grid">
-                {/*{console.log('Rendering products:', products)}*/}
                 {products.map((product) => {
                     if (!product || typeof product !== 'object' || !product.id || !product.name || !product.price) {
                         console.error('Invalid product:', product);
@@ -204,15 +208,15 @@ const ProductList = () => {
                                 <button
                                     onClick={() => handleAddToCart(product)}
                                     className="add-to-cart-btn"
-                                    aria-label={`Thêm ${product.name} vào giỏ hàng`}
+                                    aria-label={t('add_to_cart_button', { name: product.name })}
                                 >
-                                    <span className="cart-icon">🛒</span> Thêm vào giỏ hàng
+                                    <span className="cart-icon">🛒</span> {t('add_to_cart_button')}
                                 </button>
                             </div>
                             <button
                                 onClick={() => handleAddToWishlist(product)}
                                 className="wishlist-btn"
-                                aria-label={`Thêm ${product.name} vào danh sách yêu thích`}
+                                aria-label={t('add_to_wishlist', { name: product.name })}
                             >
                                 <span className="heart-icon">❤️</span>
                             </button>
@@ -232,16 +236,16 @@ const ProductList = () => {
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                    aria-label="Trang trước"
+                    aria-label={t('previous_page')}
                 >
-                    Trước
+                    {t('previous_page')}
                 </button>
                 {[...Array(totalPages)].map((_, index) => (
                     <button
                         key={index + 1}
                         onClick={() => handlePageChange(index + 1)}
                         className={`pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
-                        aria-label={`Trang ${index + 1}`}
+                        aria-label={t('page_number', { number: index + 1 })}
                     >
                         {index + 1}
                     </button>
@@ -250,12 +254,13 @@ const ProductList = () => {
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                    aria-label="Trang tiếp theo"
+                    aria-label={t('next_page')}
                 >
-                    Tiếp
+                    {t('next_page')}
                 </button>
             </div>
         </div>
     );
 };
+
 export default ProductList;

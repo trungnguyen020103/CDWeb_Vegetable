@@ -4,9 +4,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './ProductDetail.css';
 import { addToCart } from "../../store/Actions";
 import { useDispatch } from "react-redux";
+import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
 import { useToast } from '../../Toast/ToastContext';
 
 export default function ProductDetail() {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const { id } = useParams();
     const navigate = useNavigate();
@@ -19,7 +22,7 @@ export default function ProductDetail() {
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
     const [reviews, setReviews] = useState([]);
-    // Fetch product details and comments
+
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -33,7 +36,7 @@ export default function ProductDetail() {
                     description: response.data.description,
                 });
             } catch (err) {
-                setError('Không tìm thấy sản phẩm');
+                setError(t('product_not_found'));
             }
         };
 
@@ -43,7 +46,7 @@ export default function ProductDetail() {
                 setComments(response.data);
             } catch (err) {
                 console.error('Lỗi khi tải bình luận:', err);
-                showToast('Không thể tải bình luận', 'error');
+                showToast(t('comment_error'), 'error');
             }
         };
         const fetchReviews = async () => {
@@ -59,49 +62,45 @@ export default function ProductDetail() {
                 setReviews(response.data);
             } catch (err) {
                 console.error('Lỗi khi tải đánh giá:', err);
-                showToast('Không thể tải đánh giá', 'error');
+                showToast(t('review_error'), 'error');
             }
         };
         fetchReviews();
         fetchProduct();
         fetchComments();
-    }, [id, showToast]);
+    }, [id, showToast, t, token]);
 
-    // Handle quantity increase
     const handleIncreaseQuantity = () => {
         if (quantity < product?.stock) {
             setQuantity(quantity + 1);
         }
     };
 
-    // Handle quantity decrease
     const handleDecreaseQuantity = () => {
         if (quantity > 1) {
             setQuantity(quantity - 1);
         }
     };
 
-    // Handle add to cart
     const handleAddToCart = (product, quantity) => {
         if (!product || !product.id) {
-            showToast('Sản phẩm không hợp lệ', 'error');
+            showToast(t('product_not_found'), 'error');
             return;
         }
         dispatch(addToCart({ id: product.id, quantity }));
         setQuantity(1);
-        showToast('Thêm sản phẩm thành công!', 'success');
+        showToast(t('add_to_cart_success'), 'success');
     };
 
-    // Handle comment submission
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!token || !idUser) {
-            showToast('Vui lòng đăng nhập để bình luận', 'error');
+            showToast(t('login_to_comment'), 'error');
             navigate('/login');
             return;
         }
         if (!newComment.trim()) {
-            showToast('Nội dung bình luận không được để trống', 'error');
+            showToast(t('comment_empty'), 'error');
             return;
         }
 
@@ -119,12 +118,12 @@ export default function ProductDetail() {
                 }
             );
             setNewComment('');
-            showToast(response.data.message || 'Bình luận đã được gửi và đang chờ duyệt', 'success');
+            showToast(response.data.message || t('comment_pending'), 'success');
         } catch (err) {
             const errorMessage =
                 err.response?.data && typeof err.response.data === 'object'
                     ? Object.values(err.response.data).join(', ')
-                    : err.response?.data || 'Lỗi khi đăng bình luận';
+                    : err.response?.data || t('comment_error');
             showToast(errorMessage, 'error');
             if (err.response?.status === 401) {
                 navigate('/login');
@@ -132,7 +131,6 @@ export default function ProductDetail() {
         }
     };
 
-    // Handle comment deletion
     const handleDeleteComment = async (commentId) => {
         try {
             await axios.delete(`http://localhost:8080/api/comments/${commentId}`, {
@@ -141,10 +139,10 @@ export default function ProductDetail() {
                 },
             });
             setComments(comments.filter(comment => comment.id !== commentId));
-            showToast('Xóa bình luận thành công!', 'success');
+            showToast(t('delete_comment_success'), 'success');
         } catch (err) {
             const errorMessage =
-                err.response?.data || 'Lỗi khi xóa bình luận';
+                err.response?.data || t('delete_comment_error');
             showToast(errorMessage, 'error');
             if (err.response?.status === 401) {
                 navigate('/login');
@@ -157,8 +155,9 @@ export default function ProductDetail() {
     }
 
     if (!product) {
-        return <div className="detail-loading-message">Đang tải...</div>;
+        return <div className="detail-loading-message">{t('product_loading')}</div>;
     }
+
     const renderStars = (rating) => {
         return (
             <div className="detail-review-stars">
@@ -176,7 +175,6 @@ export default function ProductDetail() {
         <div className="product-detail-container">
             <div className="detail-product-card">
                 <div className="detail-product-grid">
-                    {/* Product image */}
                     <div className="detail-product-image-wrapper">
                         <img
                             src={product.imageUrl || 'https://via.placeholder.com/600'}
@@ -185,15 +183,14 @@ export default function ProductDetail() {
                         />
                     </div>
 
-                    {/* Product details and quantity selector */}
                     <div className="detail-product-details">
                         <h1 className="detail-product-name">{product.name}</h1>
-                        <div className="detail-product-price">{product.price.toLocaleString('vi-VN')}đ/1kg</div>
+                        <div className="detail-product-price">{t('price_per_kg', { price: product.price.toLocaleString('vi-VN') })}</div>
                         <div className="detail-product-stock">
-                            <span>Còn {product.stock} sản phẩm</span>
+                            <span>{t('stock_available', { stock: product.stock })}</span>
                         </div>
                         <div className="detail-quantity-section">
-                            <label className="detail-quantity-label">Số lượng:</label>
+                            <label className="detail-quantity-label">{t('quantity')}</label>
                             <div className="detail-quantity-controls">
                                 <button
                                     onClick={handleDecreaseQuantity}
@@ -232,28 +229,27 @@ export default function ProductDetail() {
                             disabled={product.stock === 0}
                         >
                             <span className="detail-cart-icon">🛒</span>
-                            Thêm vào giỏ hàng
+                            {t('add_to_cart')}
                         </button>
                     </div>
 
-                    {/* Product description */}
                     <div className="detail-product-description">
-                        <h2>Mô tả sản phẩm</h2>
-                        <p>{product.description || 'Chưa có mô tả.'}</p>
+                        <h2>{t('product_description')}</h2>
+                        <p>{product.description || t('no_description')}</p>
                     </div>
-                    {/* Review section */}
+
                     <div className="scrollable-review-frame">
                         <div className="detail-review-section">
-                            <h2>Đánh giá sản phẩm</h2>
+                            <h2>{t('product_reviews')}</h2>
                             <div className="detail-review-list">
                                 {reviews.length > 0 ? (
                                     reviews.map((review) => (
                                         <div key={review.id} className="detail-review-item">
                                             <div className="detail-review-header">
-                                                <span className="detail-review-user">Người dùng #{review.userId}</span>
+                                                <span className="detail-review-user">{t('user_label', { userId: review.userId })}</span>
                                                 <span className="detail-review-time">
-                                {new Date(review.date).toLocaleString('vi-VN')}
-                            </span>
+                                                    {new Date(review.date).toLocaleString('vi-VN')}
+                                                </span>
                                             </div>
                                             <div className="detail-review-rating">
                                                 {renderStars(review.rating)}
@@ -262,31 +258,30 @@ export default function ProductDetail() {
                                         </div>
                                     ))
                                 ) : (
-                                    <p>Chưa có đánh giá nào.</p>
+                                    <p>{t('no_reviews')}</p>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Comment section */}
                     <div className="detail-comment-section">
-                        <h2>Bình luận</h2>
+                        <h2>{t('comments')}</h2>
                         {token && idUser ? (
                             <form onSubmit={handleCommentSubmit} className="detail-comment-form">
                                 <textarea
                                     className="detail-comment-input"
-                                    placeholder="Viết bình luận của bạn..."
+                                    placeholder={t('comment_placeholder')}
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     maxLength={1000}
                                 />
                                 <button type="submit" className="detail-comment-submit-btn">
-                                    Gửi bình luận
+                                    {t('submit_comment')}
                                 </button>
                             </form>
                         ) : (
                             <p className="detail-comment-login-prompt">
-                                Vui lòng <a href="/login">đăng nhập</a> để bình luận.
+                                <Trans i18nKey="login_to_comment" components={{ 1: <a href="/login" /> }} />
                             </p>
                         )}
                         <div className="detail-comment-list">
@@ -301,7 +296,7 @@ export default function ProductDetail() {
                                                     className="detail-comment-delete-btn"
                                                     onClick={() => handleDeleteComment(comment.id)}
                                                 >
-                                                    Xóa
+                                                    {t('delete_comment')}
                                                 </button>
                                             )}
                                         </div>
@@ -309,7 +304,7 @@ export default function ProductDetail() {
                                     </div>
                                 ))
                             ) : (
-                                <p>Chưa có bình luận nào.</p>
+                                <p>{t('no_comments')}</p>
                             )}
                         </div>
                     </div>

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './register.css';
+import { useTranslation } from 'react-i18next';
 
 const Register = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [message, setMessage] = useState('');
     const [email, setEmail] = useState('');
@@ -17,14 +19,13 @@ const Register = () => {
     const [addressError, setAddressError] = useState('');
     const [phoneError, setPhoneError] = useState('');
 
-    // Validate email
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email) {
-            setEmailError('Email không được để trống');
+            setEmailError(t('email_notblank'));
             return false;
         } else if (!re.test(email)) {
-            setEmailError('Email không đúng định dạng');
+            setEmailError(t('email_invalid'));
             return false;
         } else {
             setEmailError('');
@@ -32,22 +33,21 @@ const Register = () => {
         }
     };
 
-    // Validate password
     const validatePassword = (password) => {
         if (!password) {
-            setPasswordError('Mật khẩu không được để trống');
+            setPasswordError(t('password_notblank'));
             return false;
         } else if (password.length < 6) {
-            setPasswordError('Mật khẩu phải có ít nhất 6 ký tự');
+            setPasswordError(t('password_too_short'));
             return false;
         } else if (!/[A-Z]/.test(password)) {
-            setPasswordError('Mật khẩu phải có ít nhất 1 chữ hoa');
+            setPasswordError(t('password_no_uppercase'));
             return false;
         } else if (!/[\W_]/.test(password)) {
-            setPasswordError('Mật khẩu phải có ít nhất 1 ký tự đặc biệt');
+            setPasswordError(t('password_no_special'));
             return false;
         } else if (!/[0-9]/.test(password)) {
-            setPasswordError('Mật khẩu phải có ít nhất 1 chữ số');
+            setPasswordError(t('password_no_digit'));
             return false;
         } else {
             setPasswordError('');
@@ -55,13 +55,12 @@ const Register = () => {
         }
     };
 
-    // Validate fullname
     const validateFullname = (fullname) => {
         if (!fullname) {
-            setFullnameError('Họ và tên không được để trống');
+            setFullnameError(t('fullname_notblank'));
             return false;
         } else if (fullname.length < 3) {
-            setFullnameError('Họ và tên phải có ít nhất 3 ký tự');
+            setFullnameError(t('fullname_too_short'));
             return false;
         } else {
             setFullnameError('');
@@ -69,13 +68,12 @@ const Register = () => {
         }
     };
 
-    // Validate address
     const validateAddress = (address) => {
         if (!address) {
-            setAddressError('Địa chỉ không được để trống');
+            setAddressError(t('address_notblank'));
             return false;
         } else if (address.length < 5) {
-            setAddressError('Địa chỉ quá ngắn, vui lòng nhập chi tiết hơn');
+            setAddressError(t('address_too_short'));
             return false;
         } else {
             setAddressError('');
@@ -83,14 +81,13 @@ const Register = () => {
         }
     };
 
-    // Validate phone number
     const validatePhone = (phone) => {
         const re = /^[0-9]{10,11}$/;
         if (!phone) {
-            setPhoneError('Số điện thoại không được để trống');
+            setPhoneError(t('phone_notblank'));
             return false;
         } else if (!re.test(phone)) {
-            setPhoneError('Số điện thoại không hợp lệ (10-11 số)');
+            setPhoneError(t('phone_invalid'));
             return false;
         } else {
             setPhoneError('');
@@ -153,21 +150,21 @@ const Register = () => {
                 });
 
                 if (!response.data) {
-                    setMessage('Phản hồi từ server không hợp lệ.');
+                    setMessage(t('register_error'));
                     return;
                 }
-                setMessage('Đăng ký thành công!');
+                setMessage(t('register_success'));
                 navigate('/login');
             } catch (error) {
                 console.error('Registration failed:', error);
                 if (error.response) {
-                    setMessage(error.response.data || 'Đăng ký thất bại.');
+                    setMessage(error.response.data || t('register_error'));
                 } else {
-                    setMessage('Lỗi không xác định khi đăng ký.');
+                    setMessage(t('register_error'));
                 }
             }
         } else {
-            setMessage('Vui lòng kiểm tra lại thông tin đăng ký');
+            setMessage(t('check_form'));
         }
     };
 
@@ -175,14 +172,14 @@ const Register = () => {
         <div className="register-container">
             <div className="register-card">
                 <div className="register-header">
-                    <h2>Đăng ký tài khoản</h2>
-                    <p className="register-subtitle">Vui lòng điền đầy đủ thông tin để tạo tài khoản mới</p>
+                    <h2>{t('register_account')}</h2>
+                    <p className="register-subtitle">{t('register_subtitle')}</p>
                 </div>
 
                 <div className="register-body">
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label htmlFor="fullname">Họ và tên</label>
+                            <label htmlFor="fullname">{t('fullname_label')}</label>
                             <input
                                 type="text"
                                 id="fullname"
@@ -190,13 +187,13 @@ const Register = () => {
                                 value={fullname}
                                 onChange={handleFullnameChange}
                                 onBlur={() => fullname && validateFullname(fullname)}
-                                placeholder="Nhập họ và tên của bạn"
+                                placeholder={t('fullname_placeholder')}
                             />
                             {fullnameError && <div className="invalid-feedback">{fullnameError}</div>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="email">Email</label>
+                            <label htmlFor="email">{t('email')}</label>
                             <input
                                 type="email"
                                 id="email"
@@ -204,13 +201,13 @@ const Register = () => {
                                 value={email}
                                 onChange={handleEmailChange}
                                 onBlur={() => email && validateEmail(email)}
-                                placeholder="Nhập địa chỉ email"
+                                placeholder={t('email_placeholder')}
                             />
                             {emailError && <div className="invalid-feedback">{emailError}</div>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="password">Mật khẩu</label>
+                            <label htmlFor="password">{t('password')}</label>
                             <input
                                 type="password"
                                 id="password"
@@ -218,13 +215,13 @@ const Register = () => {
                                 value={password}
                                 onChange={handlePasswordChange}
                                 onBlur={() => password && validatePassword(password)}
-                                placeholder="Tạo mật khẩu mới"
+                                placeholder={t('password_placeholder')}
                             />
                             {passwordError && <div className="invalid-feedback">{passwordError}</div>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="address">Địa chỉ</label>
+                            <label htmlFor="address">{t('address_label')}</label>
                             <input
                                 type="text"
                                 id="address"
@@ -232,13 +229,13 @@ const Register = () => {
                                 value={address}
                                 onChange={handleAddressChange}
                                 onBlur={() => address && validateAddress(address)}
-                                placeholder="Nhập địa chỉ của bạn"
+                                placeholder={t('address_placeholder')}
                             />
                             {addressError && <div className="invalid-feedback">{addressError}</div>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="phone">Số điện thoại</label>
+                            <label htmlFor="phone">{t('phone_label')}</label>
                             <input
                                 type="tel"
                                 id="phone"
@@ -246,14 +243,14 @@ const Register = () => {
                                 value={phonenumber}
                                 onChange={handlePhoneChange}
                                 onBlur={() => phonenumber && validatePhone(phonenumber)}
-                                placeholder="Nhập số điện thoại"
+                                placeholder={t('phone_placeholder')}
                             />
                             {phoneError && <div className="invalid-feedback">{phoneError}</div>}
                         </div>
 
                         <div className="form-group register-btn-container">
                             <button type="submit" className="register-btn">
-                                Đăng ký
+                                {t('register_button')}
                             </button>
                         </div>
 
@@ -266,7 +263,7 @@ const Register = () => {
 
                     <div className="login-link">
                         <p>
-                            Bạn đã có tài khoản? <a href="/login">Đăng nhập</a>
+                            {t('already_have_account')} <a href="/login">{t('login_link')}</a>
                         </p>
                     </div>
                 </div>

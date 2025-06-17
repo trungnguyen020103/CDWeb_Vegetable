@@ -1,44 +1,65 @@
-/* Home.css */
+    /* Home.css */
 
-.product-item {
-    margin: 0 10px;
-}
+    .product-item {
+        margin: 0 10px;
+    }
 
-.slick-prev, .slick-next {
-    width: 40px;
-    height: 40px;
-    z-index: 2;
-}
+    .slick-prev, .slick-next {
+        width: 40px;
+        height: 40px;
+        z-index: 2;
+    }
 
-.slick-prev:before, .slick-next:before {
-    font-size: 40px;
-    opacity: 0.75;
-    color: black;
-}
+    .slick-prev:before, .slick-next:before {
+        font-size: 40px;
+        opacity: 0.75;
+        color: black;
+    }
 
-.slick-prev {
-    left: -25px;
-}
+    .slick-prev {
+        left: -25px;
+    }
 
-.slick-next {
-    right: -25px;
-}
+    .slick-next {
+        right: -25px;
+    }
 
-.slick-slide {
-    padding: 0 10px;
-}
+    .slick-slide {
+        padding: 0 10px;
+    }
 
-.slick-list {
-    margin: 0 -10px;
-}
+    .slick-list {
+        margin: 0 -10px;
+    }
 
-/* Custom arrow styles to match section-slide */
-.slick-prev:before, .slick-next:before {
-    content: '←'; /* Use the appropriate character or image */
-    font-size: 30px;
-    color: #000; /* Adjust color as needed */
-}
+    /* Custom arrow styles to match section-slide */
+    .slick-prev:before, .slick-next:before {
+        content: '←'; /* Use the appropriate character or image */
+        font-size: 30px;
+        color: #000; /* Adjust color as needed */
+    }
 
-.slick-next:before {
-    content: '→'; /* Use the appropriate character or image */
-}
+    .slick-next:before {
+        content: '→'; /* Use the appropriate character or image */
+    }
+
+    /* Enhanced product name styling for better readability */
+    .block1-txt-child1 {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .block1-info {
+        font-size: 18px; /* Increased font size for clarity */
+        font-weight: 600; /* Slightly bold for emphasis */
+        color: #333; /* Darker color for better contrast */
+        text-transform: capitalize; /* Capitalize for consistency */
+        line-height: 1.8; /* Improved line height for readability */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap; /* Prevent text wrapping */
+        max-width: 100%; /* Ensure text stays within bounds */
+    }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
 
 const Footer = () => {
 	const { t } = useTranslation();
@@ -95,16 +96,15 @@ const Footer = () => {
 							</a>
 						</div>
 						<p className="stext-107 cl6 txt-center">
-							{`Bản quyền ©${new Date().getFullYear()} Bảo lưu mọi quyền | Được thực hiện với `}
-							<i className="fa fa-heart-o" aria-hidden="true"></i>
-							{` bởi `}
-							<a href="https://colorlib.com" target="_blank" rel="noopener noreferrer">
-								Colorlib
-							</a>
-							{` & phân phối bởi `}
-							<a href="https://themewagon.com" target="_blank" rel="noopener noreferrer">
-								ThemeWagon
-							</a>
+							<Trans
+								i18nKey="copyright"
+								values={{ year: new Date().getFullYear() }}
+								components={{
+									heart: <i className="fa fa-heart-o" aria-hidden="true" />,
+									colorlib: <a href="https://colorlib.com" target="_blank" rel="noopener noreferrer">Colorlib</a>,
+									themewagon: <a href="https://themewagon.com" target="_blank" rel="noopener noreferrer">ThemeWagon</a>,
+								}}
+							/>
 						</p>
 					</div>
 				</div>
