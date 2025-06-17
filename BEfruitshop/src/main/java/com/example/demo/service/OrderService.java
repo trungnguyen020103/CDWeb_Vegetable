@@ -24,8 +24,6 @@ public class OrderService {
     private UserRepository userRepository;
     @Autowired
     ProductRepository productRepository;
-    // 1. Thêm đơn hàng mới
-    // Trong OrderService.java, sửa phương thức addOrder
     public Order addOrder(Order order, Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
@@ -51,7 +49,6 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    // 2. Lấy danh sách đơn hàng theo userId
     public List<Order> getOrdersByUserId(Long userId) {
         return orderRepository.findByUser_IdOrderByOrderdateDesc(userId);
     }

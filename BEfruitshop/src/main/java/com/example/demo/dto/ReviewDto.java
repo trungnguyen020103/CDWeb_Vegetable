@@ -9,7 +9,6 @@ public class ReviewDto {
     private String comment;
     private LocalDateTime date;
 
-    // Constructors
     public ReviewDto() {}
 
     public ReviewDto(Integer productId, Integer userId, Integer rating, String comment, LocalDateTime date) {

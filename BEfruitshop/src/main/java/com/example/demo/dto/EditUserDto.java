@@ -13,6 +13,7 @@ public class EditUserDto {
     private String fullname;
 
     private String address;
+    @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "user.phonenumber.invalid")
     private String phonenumber;
 
     public EditUserDto(String email, String fullname, String address, String phonenumber) {

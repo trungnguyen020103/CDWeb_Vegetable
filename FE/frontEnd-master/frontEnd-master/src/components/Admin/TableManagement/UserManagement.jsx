@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import {useToast} from "../../../Toast/ToastContext";
+import { useToast } from '../../../Toast/ToastContext';
+
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -10,80 +11,128 @@ const UserManagement = () => {
         password: '',
         fullname: '',
         address: '',
-        phonenumber: ''
+        phonenumber: '',
+    });
+    const [formErrors, setFormErrors] = useState({
+        email: '',
+        password: '',
+        fullname: '',
+        phonenumber: '',
     });
     const [isEditMode, setIsEditMode] = useState(false);
     const [editUserId, setEditUserId] = useState(null);
     const [deleteUserId, setDeleteUserId] = useState(null);
     const token = localStorage.getItem('accessToken');
     const { showToast } = useToast();
+    const tableRef = useRef(null);
+
+    // Validation functions
+    const validateEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email) ? '' : 'Email không hợp lệ';
+    };
+
+    const validatePassword = (password) => {
+        if (!password) return isEditMode ? '' : 'Mật khẩu là bắt buộc';
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%])[A-Za-z\d@#$%]{8,}$/;
+        return passwordRegex.test(password)
+            ? ''
+            : 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@#$%)';
+    };
+
+    const validatePhoneNumber = (phonenumber) => {
+        if (!phonenumber) return '';
+        const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+        return phoneRegex.test(phonenumber) ? '' : 'Số điện thoại không hợp lệ (VD: 0987654321 hoặc +84987654321)';
+    };
+
+    const validateFullname = (fullname) => {
+        return fullname.trim() ? '' : 'Họ tên là bắt buộc';
+    };
+
+    // Validate form
+    const validateForm = () => {
+        const errors = {
+            email: validateEmail(formData.email),
+            password: validatePassword(formData.password),
+            fullname: validateFullname(formData.fullname),
+            phonenumber: validatePhoneNumber(formData.phonenumber),
+        };
+        setFormErrors(errors);
+        return Object.values(errors).every((error) => error === '');
+    };
+
+    // Fetch users initially
     useEffect(() => {
         fetchUsers();
     }, []);
 
+    // Initialize or update DataTable
     useEffect(() => {
-        if (users.length > 0 && window.$) {
-            const table = window.$('#userTable').DataTable({
-                destroy: true, // Đảm bảo bảng được làm mới khi dữ liệu thay đổi
-                data: users, // Sử dụng dữ liệu từ state
-                columns: [
-                    { data: 'id' },
-                    { data: 'fullname' },
-                    { data: 'email' },
-                    { data: 'address', defaultContent: '-' },
-                    { data: 'phonenumber', defaultContent: '-' },
-                    {
-                        data: null,
-                        render: (data) => `
-                        <button class="btn btn-sm btn-warning me-2 toggle-role" data-id="${data.id}">
-                            Chuyển ${data.role === 0 ? 'User' : 'Admin'}
-                        </button>
-                    `,
-                    },
-                    {
-                        data: null,
-                        render: (data) => `
-                        <button class="btn btn-sm btn-warning me-2 edit-user" data-id="${data.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-user" data-id="${data.id}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `,
-                    },
-                ],
-            });
+        if (window.$ && users.length > 0) {
+            if (!tableRef.current) {
+                tableRef.current = window.$('#userTable').DataTable({
+                    destroy: true,
+                    data: users,
+                    columns: [
+                        { data: 'id' },
+                        { data: 'fullname' },
+                        { data: 'email' },
+                        { data: 'address', defaultContent: '-' },
+                        { data: 'phonenumber', defaultContent: '-' },
+                        {
+                            data: null,
+                            render: (data) => `
+                <button class="btn btn-sm btn-warning me-2 toggle-role" data-id="${data.id}">
+                  Chuyển ${data.role === 0 ? 'User' : 'Admin'}
+                </button>
+              `,
+                        },
+                        {
+                            data: null,
+                            render: (data) => `
+                <button class="btn btn-sm btn-danger delete-user" data-id="${data.id}">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              `,
+                        },
+                    ],
+                });
 
-            // Gắn sự kiện cho các nút trong bảng
-            window.$('#userTable').on('click', '.toggle-role', function () {
-                const userId = window.$(this).data('id');
-                handleToggleRole(userId);
-            });
+                window.$('#userTable').on('click', '.toggle-role', function () {
+                    const userId = window.$(this).data('id');
+                    handleToggleRole(userId);
+                });
 
-            window.$('#userTable').on('click', '.edit-user', function () {
-                const userId = window.$(this).data('id');
-                const user = users.find((u) => u.id === userId);
-                handleEdit(user);
-            });
+                window.$('#userTable').on('click', '.edit-user', function () {
+                    const userId = window.$(this).data('id');
+                    const user = users.find((u) => u.id === userId);
+                    handleEdit(user);
+                });
 
-            window.$('#userTable').on('click', '.delete-user', function () {
-                const userId = window.$(this).data('id');
-                handleDelete(userId);
-            });
-
-            return () => {
-                table.destroy();
-            };
+                window.$('#userTable').on('click', '.delete-user', function () {
+                    const userId = window.$(this).data('id');
+                    handleDelete(userId);
+                });
+            } else {
+                tableRef.current.clear();
+                tableRef.current.rows.add(users).draw();
+            }
         }
-    }, [users]);
 
+        return () => {
+            if (tableRef.current) {
+                tableRef.current.destroy();
+                tableRef.current = null;
+                window.$('#userTable').off('click');
+            }
+        };
+    }, [users]);
 
     const fetchUsers = async () => {
         try {
             const response = await axios.get('http://localhost:8080/user/getAll', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
             });
             setUsers(response.data);
         } catch (error) {
@@ -95,35 +144,42 @@ const UserManagement = () => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+
+        // Validate
+
+        if (name === 'email') setFormErrors({ ...formErrors, email: validateEmail(value) });
+        else if (name === 'password') setFormErrors({ ...formErrors, password: validatePassword(value) });
+        else if (name === 'fullname') setFormErrors({ ...formErrors, fullname: validateFullname(value) });
+        else if (name === 'phonenumber') setFormErrors({ ...formErrors, phonenumber: validatePhoneNumber(value) });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validateForm()) {
+            showToast('Vui lòng sửa các lỗi trong biểu mẫu', 'error');
+            return;
+        }
+
         try {
             if (isEditMode) {
-                const response = await axios.put(`http://localhost:8080/admin/user/update/${editUserId}`, formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                const updateData = { ...formData };
+                if (!updateData.password) delete updateData.password;
+
+                const response = await axios.put(`http://localhost:8080/admin/user/update/${editUserId}`, updateData, {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
                 if (response.status === 200) {
-                    // Cập nhật người dùng trong state
                     setUsers((prevUsers) =>
-                        prevUsers.map((user) =>
-                            user.id === editUserId ? { ...user, ...formData } : user
-                        )
+                        prevUsers.map((user) => (user.id === editUserId ? { ...user, ...updateData } : user))
                     );
                     handleCloseModal();
                     showToast('Cập nhật thành công', 'success');
                 }
             } else {
                 const response = await axios.post('http://localhost:8080/admin/user/add', formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: { Authorization: `Bearer ${token}` },
                 });
                 if (response.status === 201) {
-                    // Thêm người dùng mới vào state
                     setUsers((prevUsers) => [...prevUsers, response.data]);
                     handleCloseModal();
                     showToast('Thêm người dùng thành công', 'success');
@@ -134,24 +190,19 @@ const UserManagement = () => {
             showToast('Lỗi khi xử lý người dùng', 'error');
         }
     };
+
     const handleToggleRole = async (userId) => {
         try {
             const response = await axios.put(`http://localhost:8080/admin/user/changerole/${userId}`, {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` },
             });
             const updatedUser = response.data;
-
-            // Cập nhật danh sách user trong state
             setUsers((prevUsers) =>
-                prevUsers.map((user) =>
-                    user.id === updatedUser.id ? updatedUser : user
-                )
+                prevUsers.map((user) => (user.id === updatedUser.id ? updatedUser : user))
             );
             showToast('Đổi quyền thành công', 'success');
         } catch (error) {
-            console.error("Lỗi đổi role:", error);
+            console.error('Lỗi đổi role:', error);
             showToast('Lỗi khi đổi quyền người dùng', 'error');
         }
     };
@@ -164,7 +215,13 @@ const UserManagement = () => {
             password: '',
             fullname: user.fullname,
             address: user.address || '',
-            phonenumber: user.phonenumber || ''
+            phonenumber: user.phonenumber || '',
+        });
+        setFormErrors({
+            email: '',
+            password: '',
+            fullname: '',
+            phonenumber: '',
         });
         setShowModal(true);
     };
@@ -177,12 +234,10 @@ const UserManagement = () => {
     const confirmDelete = async () => {
         try {
             const response = await axios.delete(`http://localhost:8080/admin/user/delete/${deleteUserId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (response.status === 200) {
-                fetchUsers();
+                setUsers((prevUsers) => prevUsers.filter((user) => user.id !== deleteUserId));
                 setShowDeleteModal(false);
                 setDeleteUserId(null);
                 showToast('Xóa người dùng thành công', 'success');
@@ -202,7 +257,13 @@ const UserManagement = () => {
             password: '',
             fullname: '',
             address: '',
-            phonenumber: ''
+            phonenumber: '',
+        });
+        setFormErrors({
+            email: '',
+            password: '',
+            fullname: '',
+            phonenumber: '',
         });
     };
 
@@ -234,42 +295,7 @@ const UserManagement = () => {
                                 <th>Action</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            {users.map((user) => (
-                                <tr key={user.id}>
-                                    <td>{user.id}</td>
-                                    <td>{user.fullname}</td>
-                                    <td>{user.email}</td>
-                                    <td>{user.address || '-'}</td>
-                                    <td>{user.phonenumber || '-'}</td>
-                                    <td>
-                                        <button
-                                            onClick={() => handleToggleRole(user.id)}
-                                            className="btn btn-sm btn-warning me-2"
-                                        >
-                                            Chuyển {user.role === 0 ? "User" : "Admin"}
-                                        </button>
-                                    </td>
-
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-warning me-2"
-                                            title="Sửa"
-                                            onClick={() => handleEdit(user)}
-                                        >
-                                            <i className="fas fa-edit"></i>
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-danger"
-                                            title="Xóa"
-                                            onClick={() => handleDelete(user.id)}
-                                        >
-                                            <i className="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
@@ -290,39 +316,56 @@ const UserManagement = () => {
                                         <label htmlFor="email" className="form-label">Email</label>
                                         <input
                                             type="email"
-                                            className="form-control"
+                                            className={`form-control ${formErrors.email ? 'is-invalid' : ''}`}
                                             id="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             required
                                         />
+                                        {formErrors.email && <div className="invalid-feedback">{formErrors.email}</div>}
                                     </div>
                                     {!isEditMode && (
                                         <div className="mb-3">
                                             <label htmlFor="password" className="form-label">Password</label>
                                             <input
                                                 type="password"
-                                                className="form-control"
+                                                className={`form-control ${formErrors.password ? 'is-invalid' : ''}`}
                                                 id="password"
                                                 name="password"
                                                 value={formData.password}
                                                 onChange={handleInputChange}
                                                 required
                                             />
+                                            {formErrors.password && <div className="invalid-feedback">{formErrors.password}</div>}
+                                        </div>
+                                    )}
+                                    {isEditMode && (
+                                        <div className="mb-3">
+                                            <label htmlFor="password" className="form-label">Password (để trống nếu không đổi)</label>
+                                            <input
+                                                type="password"
+                                                className={`form-control ${formErrors.password ? 'is-invalid' : ''}`}
+                                                id="password"
+                                                name="password"
+                                                value={formData.password}
+                                                onChange={handleInputChange}
+                                            />
+                                            {formErrors.password && <div className="invalid-feedback">{formErrors.password}</div>}
                                         </div>
                                     )}
                                     <div className="mb-3">
                                         <label htmlFor="fullname" className="form-label">Full Name</label>
                                         <input
                                             type="text"
-                                            className="form-control"
+                                            className={`form-control ${formErrors.fullname ? 'is-invalid' : ''}`}
                                             id="fullname"
                                             name="fullname"
                                             value={formData.fullname}
                                             onChange={handleInputChange}
                                             required
                                         />
+                                        {formErrors.fullname && <div className="invalid-feedback">{formErrors.fullname}</div>}
                                     </div>
                                     <div className="mb-3">
                                         <label htmlFor="address" className="form-label">Address</label>
@@ -339,12 +382,13 @@ const UserManagement = () => {
                                         <label htmlFor="phonenumber" className="form-label">Phone Number</label>
                                         <input
                                             type="text"
-                                            className="form-control"
+                                            className={`form-control ${formErrors.phonenumber ? 'is-invalid' : ''}`}
                                             id="phonenumber"
                                             name="phonenumber"
                                             value={formData.phonenumber}
                                             onChange={handleInputChange}
                                         />
+                                        {formErrors.phonenumber && <div className="invalid-feedback">{formErrors.phonenumber}</div>}
                                     </div>
                                     <div className="modal-footer">
                                         <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>

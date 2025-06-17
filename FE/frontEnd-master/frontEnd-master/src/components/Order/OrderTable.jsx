@@ -518,7 +518,7 @@ const OrderTable = () => {
                                             onChange={handleReviewInputChange}
                                             className="form-control"
                                             rows="4"
-                                            placeholder={t('write_comment')}
+                                            placeholder={t('nhập đánh giá')}
                                         ></textarea>
                                     </div>
                                     <div className="modal-footer">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Slider from 'react-slick';
 import { useTranslation } from 'react-i18next';
-import axios from '../../axiosConfig'; // Use custom axios
+import axios from '../../axiosConfig';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './Home.css';

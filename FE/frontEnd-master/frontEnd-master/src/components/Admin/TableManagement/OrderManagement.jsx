@@ -11,7 +11,6 @@ const OrderManagement = () => {
     const dataTableInitialized = useRef(false);
     const token = localStorage.getItem('accessToken');
     const { showToast } = useToast();
-    // Hàm chuyển đổi status sang tiếng Việt
     const getStatusText = (status) => {
         switch (Number(status)) {
             case 0:

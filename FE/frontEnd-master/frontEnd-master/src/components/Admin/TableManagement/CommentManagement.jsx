@@ -3,7 +3,7 @@ import axios from 'axios';
 import {useToast} from "../../../Toast/ToastContext";
 const CommentManagement = () => {
     const [comments, setComments] = useState([]);
-    const dataTableInitialized = useRef(false); // đánh dấu đã khởi tạo DataTable
+    const dataTableInitialized = useRef(false);
     const token = localStorage.getItem('accessToken');
     const { showToast } = useToast();
     useEffect(() => {

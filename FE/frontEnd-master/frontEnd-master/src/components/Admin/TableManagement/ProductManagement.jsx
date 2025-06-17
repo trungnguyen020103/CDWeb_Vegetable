@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import {useToast} from "../../../Toast/ToastContext";
+import { useToast } from '../../../Toast/ToastContext';
+
 const ProductManagement = () => {
     const [products, setProducts] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -11,7 +12,7 @@ const ProductManagement = () => {
         description: '',
         price: '',
         stock: '',
-        image: null
+        image: null,
     });
     const [imagePreview, setImagePreview] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -20,17 +21,69 @@ const ProductManagement = () => {
     const [error, setError] = useState('');
     const token = localStorage.getItem('accessToken');
     const { showToast } = useToast();
+    const tableRef = useRef(null);
+
     useEffect(() => {
         fetchProducts();
     }, []);
 
     useEffect(() => {
-        if (products.length > 0 && window.$) {
-            const table = window.$('#productTable').DataTable();
-            return () => {
-                table.destroy();
-            };
+        if (window.$ && products.length > 0) {
+            if (!tableRef.current) {
+                tableRef.current = window.$('#productTable').DataTable({
+                    destroy: true,
+                    data: products,
+                    columns: [
+                        { data: 'id' },
+                        { data: 'name' },
+                        { data: 'category.name', defaultContent: '-' },
+                        {
+                            data: 'price',
+                            render: (data) => data.toLocaleString('vi-VN'),
+                        },
+                        { data: 'stock' },
+                        {
+                            data: 'imageUrl',
+                            render: (data, type, row) =>
+                                `<img src="${data}" alt="${row.name}" style="width: 50px; height: 50px; object-fit: cover;" />`,
+                        },
+                        {
+                            data: null,
+                            render: (data) => `
+                <button class="btn btn-sm btn-warning me-2 edit-product" data-id="${data.id}">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger delete-product" data-id="${data.id}">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              `,
+                        },
+                    ],
+                });
+                window.$('#productTable').on('click', '.edit-product', function () {
+                    const productId = window.$(this).data('id');
+                    const product = products.find((p) => p.id === productId);
+                    handleEdit(product);
+                });
+
+                window.$('#productTable').on('click', '.delete-product', function () {
+                    const productId = window.$(this).data('id');
+                    handleDelete(productId);
+                });
+            } else {
+                tableRef.current.clear();
+                tableRef.current.rows.add(products).draw();
+            }
         }
+
+        // Cleanup
+        return () => {
+            if (tableRef.current) {
+                tableRef.current.destroy();
+                tableRef.current = null;
+                window.$('#productTable').off('click'); // Remove event listeners
+            }
+        };
     }, [products]);
 
     const fetchProducts = async () => {
@@ -57,7 +110,6 @@ const ProductManagement = () => {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Validate file type and size (max 5MB)
             const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
             if (!validTypes.includes(file.type)) {
                 setError('Vui lòng chọn file ảnh định dạng JPG, PNG hoặc GIF.');
@@ -83,7 +135,7 @@ const ProductManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        // Validate required fields
+        // Validate
         if (!isEditMode && !formData.image) {
             setError('Vui lòng chọn hình ảnh cho sản phẩm.');
             return;
@@ -110,7 +162,7 @@ const ProductManagement = () => {
             description: formData.description?.trim() || '',
             price: parseFloat(formData.price),
             stock: parseInt(formData.stock),
-            categoryId: parseInt(formData.categoryId)
+            categoryId: parseInt(formData.categoryId),
         };
 
         const formDataToSend = new FormData();
@@ -124,50 +176,50 @@ const ProductManagement = () => {
             const config = {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    // 'Content-Type': 'multipart/form-data'
-                }
+                },
             };
-            console.log('Sending FormData:', {
-                product: productDto,
-                image: formData.image?.name || 'No image'
-            }); // Debug log
             if (isEditMode) {
                 const response = await axios.put(`http://localhost:8080/admin/product/${editProductId}`, formDataToSend, config);
                 if (response.status === 200) {
-                    fetchProducts();
+                    // Update product
+                    setProducts((prevProducts) =>
+                        prevProducts.map((product) =>
+                            product.id === editProductId
+                                ? { ...product, ...productDto, imageUrl: response.data.imageUrl || product.imageUrl }
+                                : product
+                        )
+                    );
                     handleCloseModal();
                     showToast('Cập nhật thành công', 'success');
                 }
             } else {
                 const response = await axios.post('http://localhost:8080/admin/product/add', formDataToSend, config);
                 if (response.status === 201) {
-                    fetchProducts();
+                    // Add the new product
+                    setProducts((prevProducts) => [...prevProducts, response.data]);
                     handleCloseModal();
+                    showToast('Thêm sản phẩm thành công!!', 'success');
                 }
-                showToast('Thêm sản phẩm thành công!!', 'success');
             }
         } catch (error) {
             console.error('Error processing product:', {
                 message: error.message,
                 response: error.response?.data,
                 status: error.response?.status,
-                headers: error.response?.headers
+                headers: error.response?.headers,
             });
-
             let errorMessage = 'Có lỗi xảy ra khi xử lý. Vui lòng thử lại.';
             if (error.response) {
                 if (error.response.status === 400) {
-                    showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
                     errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
                 } else if (error.response.status === 401) {
                     errorMessage = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
-                    showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
                 } else if (error.response.status === 500) {
-                    showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
                     errorMessage = error.response.data.message || 'Lỗi server. Vui lòng thử lại sau.';
                 }
             }
             setError(errorMessage);
+            showToast(errorMessage, 'error');
         }
     };
 
@@ -180,7 +232,7 @@ const ProductManagement = () => {
             description: product.description || '',
             price: product.price || '',
             stock: product.stock || '',
-            image: null
+            image: null,
         });
         setImagePreview(product.imageUrl || null);
         setShowModal(true);
@@ -201,14 +253,15 @@ const ProductManagement = () => {
                 },
             });
             if (response.status === 204) {
-                fetchProducts();
+                // delete product
+                setProducts((prevProducts) => prevProducts.filter((product) => product.id !== deleteProductId));
                 setShowDeleteModal(false);
                 setDeleteProductId(null);
                 showToast('Xóa thành công', 'success');
             }
         } catch (error) {
-            showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
             console.error('Error deleting product:', error);
+            showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
         }
     };
 
@@ -222,7 +275,7 @@ const ProductManagement = () => {
             description: '',
             price: '',
             stock: '',
-            image: null
+            image: null,
         });
         setImagePreview(null);
         setError('');
@@ -256,40 +309,7 @@ const ProductManagement = () => {
                                 <th>Action</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            {products.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.id}</td>
-                                    <td>{item.name}</td>
-                                    <td>{item.category?.name || '-'}</td>
-                                    <td>{item.price.toLocaleString('vi-VN')}</td>
-                                    <td>{item.stock}</td>
-                                    <td>
-                                        <img
-                                            src={item.imageUrl}
-                                            alt={item.name}
-                                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                                        />
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-warning me-2"
-                                            title="Sửa"
-                                            onClick={() => handleEdit(item)}
-                                        >
-                                            <i className="fas fa-edit"></i>
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-danger"
-                                            title="Xóa"
-                                            onClick={() => handleDelete(item.id)}
-                                        >
-                                            <i className="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
+                            <tbody></tbody> {/* Let DataTable populate the tbody */}
                         </table>
                     </div>
                 </div>

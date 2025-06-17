@@ -14,7 +14,7 @@ const ChangePassword = () => {
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
 
-    // Validate new password
+    // Validate
     const validateNewPassword = (password) => {
         if (!password) return 'Mật khẩu mới không được để trống';
         if (password.length < 6) return 'Mật khẩu mới phải có ít nhất 6 ký tự';

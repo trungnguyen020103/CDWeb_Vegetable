@@ -14,8 +14,9 @@ public class UpdateUserDto {
     @Size(max = 255, message = "user.address.length")
     private String address;
 
-    @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "user.phonenumber.invalid")
+    @Pattern(regexp = "^(0[3|5|7|8|9])[0-9]{8}$", message = "user.phonenumber.invalid")
     private String phonenumber;
+
 
     // Getters and Setters
     public Long getId() {
