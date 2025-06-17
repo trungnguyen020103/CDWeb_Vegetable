@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './profile.css';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../../Toast/ToastContext';
 
 const Profile = () => {
     const { t } = useTranslation();
@@ -15,10 +16,36 @@ const Profile = () => {
         address: '',
         phonenumber: '',
     });
+    const [formErrors, setFormErrors] = useState({
+        fullname: '',
+        phonenumber: '',
+    });
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
+    const { showToast } = useToast();
+
+    // Validation functions
+    const validatePhoneNumber = (phonenumber) => {
+        if (!phonenumber) return ''; // Phone number is optional
+        const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+        return phoneRegex.test(phonenumber) ? '' : t('phone_invalid');
+    };
+
+    const validateFullname = (fullname) => {
+        return fullname.trim() ? '' : t('fullname_required');
+    };
+
+    // Validate form
+    const validateForm = () => {
+        const errors = {
+            fullname: validateFullname(formData.fullname),
+            phonenumber: validatePhoneNumber(formData.phonenumber),
+        };
+        setFormErrors(errors);
+        return Object.values(errors).every((error) => error === '');
+    };
 
     const fetchUser = useCallback(async () => {
         try {
@@ -52,13 +79,25 @@ const Profile = () => {
     }, [idUser, token, fetchUser, navigate]);
 
     const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        // Real-time validation
+        if (name === 'fullname') {
+            setFormErrors({ ...formErrors, fullname: validateFullname(value) });
+        } else if (name === 'phonenumber') {
+            setFormErrors({ ...formErrors, phonenumber: validatePhoneNumber(value) });
+        }
     };
 
     const handleEditToggle = () => {
         setIsEditing(!isEditing);
         setError(null);
         setSuccess(null);
+        setFormErrors({
+            fullname: '',
+            phonenumber: '',
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -66,16 +105,18 @@ const Profile = () => {
         setError(null);
         setSuccess(null);
 
+        if (!validateForm()) {
+            showToast(t('form_invalid'), 'error');
+            return;
+        }
+
         try {
-            const response = await axios.put(
-                'http://localhost:8080/user/update',
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const response = await axios.put('http://localhost:8080/user/update', formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            showToast(t('update_success'), 'success');
             setSuccess(t('update_success'));
             setUser({ ...user, ...formData });
             setIsEditing(false);
@@ -90,6 +131,7 @@ const Profile = () => {
             } else {
                 setError(t('update_error'));
             }
+            showToast(t('update_error'), 'error');
         }
     };
 
@@ -187,13 +229,16 @@ const Profile = () => {
                                                             </label>
                                                             <input
                                                                 type="text"
-                                                                className="form-control"
+                                                                className={`form-control ${formErrors.fullname ? 'is-invalid' : ''}`}
                                                                 id="fullname"
                                                                 name="fullname"
                                                                 value={formData.fullname}
                                                                 onChange={handleInputChange}
                                                                 required
                                                             />
+                                                            {formErrors.fullname && (
+                                                                <div className="invalid-feedback">{formErrors.fullname}</div>
+                                                            )}
                                                         </div>
                                                         <div className="col-12 mb-3">
                                                             <label htmlFor="address" className="form-label">
@@ -214,12 +259,15 @@ const Profile = () => {
                                                             </label>
                                                             <input
                                                                 type="text"
-                                                                className="form-control"
+                                                                className={`form-control ${formErrors.phonenumber ? 'is-invalid' : ''}`}
                                                                 id="phonenumber"
                                                                 name="phonenumber"
                                                                 value={formData.phonenumber}
                                                                 onChange={handleInputChange}
                                                             />
+                                                            {formErrors.phonenumber && (
+                                                                <div className="invalid-feedback">{formErrors.phonenumber}</div>
+                                                            )}
                                                         </div>
                                                         <div className="d-flex justify-content-start">
                                                             <button type="submit" className="btn btn-primary me-2">
@@ -248,6 +296,7 @@ const Profile = () => {
                                                     </div>
                                                 </div>
                                             )}
+                                            {success && <div className="alert alert-success mt-3">{success}</div>}
                                             <div className="d-flex justify-content-start">
                                                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
                                                     <i className="fab fa-facebook-f fa-lg me-3"></i>

@@ -9,7 +9,7 @@ import ReviewManagement from "../TableManagement/ReviewManagement";
 import OrderManagement from "../TableManagement/OrderManagement";
 
 const HomeAdmin = () => {
-    const [activeView, setActiveView] = useState('dashboard'); // State to manage active view
+    const [activeView, setActiveView] = useState('dashboard');
 
     const handleViewChange = (view) => {
         setActiveView(view);

@@ -24,7 +24,7 @@ const CategoryManagement = () => {
     useEffect(() => {
         if (categories.length > 0 && window.$) {
             const table = window.$('#categoryTable').DataTable({
-                destroy: true, // Ensure table is reinitialized on data change
+                destroy: true,
                 data: categories,
                 columns: [
                     { data: 'id' },
@@ -45,14 +45,14 @@ const CategoryManagement = () => {
                         `,
                     },
                 ],
-                pageLength: 5, // Default items per page
+                pageLength: 5,
                 language: {
                     search: "Search by name or description:",
                     searchPlaceholder: "Enter term..."
                 }
             });
 
-            // Attach event listeners for edit and delete buttons
+
             window.$('#categoryTable').on('click', '.edit-category', function () {
                 const categoryId = window.$(this).data('id');
                 const category = categories.find((c) => c.id === categoryId);

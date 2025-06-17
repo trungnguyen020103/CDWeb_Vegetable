@@ -8,8 +8,10 @@ const Dashboard = () => {
         { title: 'Total Products', value: 0, icon: 'fa-box' },
         { title: 'Total Categories', value: 0, icon: 'fa-tags' },
         { title: 'Total Comments', value: 0, icon: 'fa-comments' },
+        { title: 'Total Orders', value: 0, icon: 'fa-shopping-cart' },
+        { title: 'Total Revenue', value: 0, icon: 'fa-money-bill' },
     ]);
-    const [error, setError] = useState(null); // Added error state
+    const [error, setError] = useState(null);
     const token = localStorage.getItem('accessToken');
     const chartRef = useRef(null);
     const chartInstance = useRef(null);
@@ -25,15 +27,15 @@ const Dashboard = () => {
 
                 const data = response.data;
 
-                // Update statistics
                 setStats([
                     { title: 'Total Users', value: data.totalUsers, icon: 'fa-users' },
                     { title: 'Total Products', value: data.totalProducts, icon: 'fa-box' },
                     { title: 'Total Categories', value: data.totalCategories, icon: 'fa-tags' },
                     { title: 'Total Comments', value: data.totalComments, icon: 'fa-comments' },
+                    { title: 'Total Orders', value: data.totalOrders, icon: 'fa-shopping-cart' },
+                    { title: 'Total Revenue', value: data.totalRevenue, icon: 'fa-money-bill' },
                 ]);
 
-                // Prepare chart data
                 const labels = data.monthlyRevenue.map(item => item.month);
                 const revenues = data.monthlyRevenue.map(item => item.revenue);
 
@@ -93,12 +95,12 @@ const Dashboard = () => {
 
             } catch (error) {
                 console.error('Error fetching dashboard stats:', error);
-                setError('Failed to load dashboard data. Please try again later.'); // Use setError here
+                setError('Failed to load dashboard data. Please try again later.');
             }
         };
 
         fetchDashboardData();
-    }, []);
+    }, [token]);
 
     return (
         <div className="container mt-4">
@@ -116,7 +118,11 @@ const Dashboard = () => {
                                 <i className={`fa ${stat.icon} fa-2x me-3 text-primary`}></i>
                                 <div>
                                     <h5 className="card-title mb-0">{stat.title}</h5>
-                                    <p className="card-text text-muted">{stat.value.toLocaleString('vi-VN')}</p>
+                                    <p className="card-text text-muted">
+                                        {stat.title === 'Total Revenue'
+                                            ? `${stat.value.toLocaleString('vi-VN')} VND`
+                                            : stat.value.toLocaleString('vi-VN')}
+                                    </p>
                                 </div>
                             </div>
                         </div>

@@ -25,9 +25,11 @@ public class DashboardService {
         long totalProducts = productRepo.count();
         long totalCategories = categoryRepo.count();
         long totalComments = commentRepo.count();
+        long totalOrders = orderRepo.count();
 
         List<Object[]> raw = orderRepo.revenuePerMonth(year);
         List<MonthlyRevenueDto> revenue = new ArrayList<>();
+        double totalRevenue = 0; // Tổng doanh thu
 
         for (Object[] arr : raw) {
             Integer monthNumber = (Integer) arr[0];
@@ -39,6 +41,7 @@ public class DashboardService {
             dto.setRevenue(amount);
 
             revenue.add(dto);
+            totalRevenue += amount;
         }
 
         DashboardStatsDto dto = new DashboardStatsDto();
@@ -46,9 +49,12 @@ public class DashboardService {
         dto.setTotalProducts(totalProducts);
         dto.setTotalCategories(totalCategories);
         dto.setTotalComments(totalComments);
+        dto.setTotalOrders(totalOrders);
+        dto.setTotalRevenue(totalRevenue);
         dto.setMonthlyRevenue(revenue);
 
         return dto;
     }
+
 
 }
