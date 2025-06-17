@@ -42,7 +42,7 @@ const Payment = () => {
         e.preventDefault();
 
         if (!userId) {
-            showToast('Không tìm thấy ID người dùng. Vui lòng đăng nhập lại!', 'error');
+            showToast('Vui lòng đăng nhập để sử dụng tính năng này!', 'error');
             navigate('/login');
             return;
         }

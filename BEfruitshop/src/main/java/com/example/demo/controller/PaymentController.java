@@ -142,7 +142,7 @@ public class PaymentController {
 
             if ((vnpSecureHash == null || calculatedHash.equals(vnpSecureHash)) && "00".equals(vnpResponseCode)) {
                 // Thanh toán thành công
-                orderService.updateOrderStatus(orderId, "PAID");
+                orderService.updateOrderStatus(orderId, "0");
                 logger.info("Payment successful for orderId: {}", orderId);
             } else {
                 // Thanh toán thất bại

@@ -64,7 +64,7 @@ const ShoppingCart = () => {
 
     const handleCheckout = () => {
         if (selectedIds.length === 0) {
-            alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.");
+            showToast('Vui lòng chọn ít nhất 1 sản phẩm!', 'error');
             return;
         }
 

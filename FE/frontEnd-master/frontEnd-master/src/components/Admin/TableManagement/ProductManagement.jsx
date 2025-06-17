@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+import {useToast} from "../../../Toast/ToastContext";
 const ProductManagement = () => {
     const [products, setProducts] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -19,7 +19,7 @@ const ProductManagement = () => {
     const [deleteProductId, setDeleteProductId] = useState(null);
     const [error, setError] = useState('');
     const token = localStorage.getItem('accessToken');
-
+    const { showToast } = useToast();
     useEffect(() => {
         fetchProducts();
     }, []);
@@ -44,11 +44,7 @@ const ProductManagement = () => {
             setProducts(response.data);
         } catch (error) {
             console.error('Error fetching products:', error);
-            alert('Không thể tải danh sách sản phẩm. Vui lòng kiểm tra lại.');
-            if (error.response?.status === 401) {
-                // Optionally redirect to login
-                // window.location.href = '/login';
-            }
+            showToast('Tải danh sách không thành công', 'error');
         }
     };
 
@@ -87,7 +83,6 @@ const ProductManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
         // Validate required fields
         if (!isEditMode && !formData.image) {
             setError('Vui lòng chọn hình ảnh cho sản phẩm.');
@@ -141,6 +136,7 @@ const ProductManagement = () => {
                 if (response.status === 200) {
                     fetchProducts();
                     handleCloseModal();
+                    showToast('Cập nhật thành công', 'success');
                 }
             } else {
                 const response = await axios.post('http://localhost:8080/admin/product/add', formDataToSend, config);
@@ -148,6 +144,7 @@ const ProductManagement = () => {
                     fetchProducts();
                     handleCloseModal();
                 }
+                showToast('Thêm sản phẩm thành công!!', 'success');
             }
         } catch (error) {
             console.error('Error processing product:', {
@@ -156,15 +153,17 @@ const ProductManagement = () => {
                 status: error.response?.status,
                 headers: error.response?.headers
             });
+
             let errorMessage = 'Có lỗi xảy ra khi xử lý. Vui lòng thử lại.';
             if (error.response) {
                 if (error.response.status === 400) {
+                    showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
                     errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
                 } else if (error.response.status === 401) {
                     errorMessage = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
-                    // Optionally redirect to login
-                    // window.location.href = '/login';
+                    showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
                 } else if (error.response.status === 500) {
+                    showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
                     errorMessage = error.response.data.message || 'Lỗi server. Vui lòng thử lại sau.';
                 }
             }
@@ -205,10 +204,11 @@ const ProductManagement = () => {
                 fetchProducts();
                 setShowDeleteModal(false);
                 setDeleteProductId(null);
+                showToast('Xóa thành công', 'success');
             }
         } catch (error) {
+            showToast('Có lỗi xảy ra,vui lòng thử lại', 'error');
             console.error('Error deleting product:', error);
-            alert('Có lỗi xảy ra khi xóa sản phẩm. Vui lòng thử lại.');
         }
     };
 

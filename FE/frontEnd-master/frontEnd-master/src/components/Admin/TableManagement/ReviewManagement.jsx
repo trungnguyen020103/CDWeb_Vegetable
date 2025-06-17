@@ -1,13 +1,13 @@
 import React, {useEffect, useState, useRef} from 'react';
 import axios from 'axios';
-
+import {useToast} from "../../../Toast/ToastContext";
 const ReviewManagement = () => {
     const [reviews, setReviews] = useState([]);
     const [showDeleteModal, setShowDeleteModal] = useState(false); // State cho modal xóa
     const [deleteReviewId, setDeleteReviewId] = useState(null); // ID của review cần xóa
     const dataTableInitialized = useRef(false);
     const token = localStorage.getItem('accessToken');
-
+    const { showToast } = useToast();
     useEffect(() => {
         const fetchReviews = async () => {
             try {
@@ -18,6 +18,7 @@ const ReviewManagement = () => {
                 });
                 setReviews(response.data);
             } catch (error) {
+                showToast('Lỗi khi tải danh sách', 'error');
                 console.error('Lỗi khi fetch review:', error);
             }
         };
@@ -40,9 +41,10 @@ const ReviewManagement = () => {
             setReviews((prev) => prev.filter((item) => item.id !== deleteReviewId)); // Cập nhật danh sách
             setShowDeleteModal(false); // Đóng modal
             setDeleteReviewId(null); // Reset ID
+            showToast('Xóa thành công', 'success');
         } catch (err) {
             console.error('Lỗi xóa review:', err);
-            alert(err.response?.data || 'Không thể xóa review');
+            showToast('Xóa thất bại', 'error');
         }
     };
 

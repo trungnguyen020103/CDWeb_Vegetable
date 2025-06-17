@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+import {useToast} from "../../../Toast/ToastContext";
 
 const OrderManagement = () => {
     const [orders, setOrders] = useState([]);
@@ -9,7 +10,7 @@ const OrderManagement = () => {
     const [selectedOrderDetails, setSelectedOrderDetails] = useState([]);
     const dataTableInitialized = useRef(false);
     const token = localStorage.getItem('accessToken');
-
+    const { showToast } = useToast();
     // Hàm chuyển đổi status sang tiếng Việt
     const getStatusText = (status) => {
         switch (Number(status)) {
@@ -38,8 +39,8 @@ const OrderManagement = () => {
                 });
                 setOrders(response.data);
             } catch (error) {
+                showToast('Tải danh sách đơn hàng thất bại', 'error');
                 console.error('Lỗi khi fetch đơn hàng:', error);
-                alert('Không thể tải danh sách đơn hàng');
             }
         };
 
@@ -58,10 +59,12 @@ const OrderManagement = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
+            showToast('Xóa thành công', 'success');
             setOrders((prev) => prev.filter((item) => item.id !== deleteOrderId));
             setShowDeleteModal(false);
             setDeleteOrderId(null);
         } catch (err) {
+            showToast('Xóa thất bại', 'error');
             console.error('Lỗi xóa đơn hàng:', err);
             alert(err.response?.data || 'Không thể xóa đơn hàng');
         }
@@ -101,7 +104,9 @@ const OrderManagement = () => {
                     order.id === orderId ? { ...order, status: newStatus } : order,
                 ),
             );
+            showToast('Cập nhật thành công', 'success');
         } catch (error) {
+            showToast('Cập nhật thất bại', 'error');
             console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
             alert('Không thể cập nhật trạng thái đơn hàng');
         }

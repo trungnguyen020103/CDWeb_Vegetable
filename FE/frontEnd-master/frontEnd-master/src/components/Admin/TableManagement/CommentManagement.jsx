@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-
+import {useToast} from "../../../Toast/ToastContext";
 const CommentManagement = () => {
     const [comments, setComments] = useState([]);
     const dataTableInitialized = useRef(false); // đánh dấu đã khởi tạo DataTable
     const token = localStorage.getItem('accessToken');
-
+    const { showToast } = useToast();
     useEffect(() => {
         const fetchComments = async () => {
             try {
@@ -29,8 +29,10 @@ const CommentManagement = () => {
                     Authorization: `Bearer ${token}`
                 }
             });
+            showToast('Xóa thành công', 'success');
             setComments(prev => prev.filter(item => item.id !== commentId));
         } catch (err) {
+            showToast('Xóa không thành công', 'error');
             console.error("Lỗi xoá comment:", err);
             alert(err.response?.data || "Không thể xoá comment");
         }
@@ -50,7 +52,9 @@ const CommentManagement = () => {
                     comment.id === commentId ? { ...comment, status: newStatus } : comment
                 )
             );
+            showToast('Cập nhật thành công', 'success');
         } catch (error) {
+            showToast('Cập nhật thất bại ', 'error');
             console.error('Lỗi cập nhật trạng thái:', error);
             alert("Không thể cập nhật trạng thái.");
         }
