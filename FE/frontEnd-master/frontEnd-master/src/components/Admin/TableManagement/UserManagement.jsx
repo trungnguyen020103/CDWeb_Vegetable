@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+import {useToast} from "../../../Toast/ToastContext";
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -16,14 +16,61 @@ const UserManagement = () => {
     const [editUserId, setEditUserId] = useState(null);
     const [deleteUserId, setDeleteUserId] = useState(null);
     const token = localStorage.getItem('accessToken');
-
+    const { showToast } = useToast();
     useEffect(() => {
         fetchUsers();
     }, []);
 
     useEffect(() => {
         if (users.length > 0 && window.$) {
-            const table = window.$('#userTable').DataTable();
+            const table = window.$('#userTable').DataTable({
+                destroy: true, // Đảm bảo bảng được làm mới khi dữ liệu thay đổi
+                data: users, // Sử dụng dữ liệu từ state
+                columns: [
+                    { data: 'id' },
+                    { data: 'fullname' },
+                    { data: 'email' },
+                    { data: 'address', defaultContent: '-' },
+                    { data: 'phonenumber', defaultContent: '-' },
+                    {
+                        data: null,
+                        render: (data) => `
+                        <button class="btn btn-sm btn-warning me-2 toggle-role" data-id="${data.id}">
+                            Chuyển ${data.role === 0 ? 'User' : 'Admin'}
+                        </button>
+                    `,
+                    },
+                    {
+                        data: null,
+                        render: (data) => `
+                        <button class="btn btn-sm btn-warning me-2 edit-user" data-id="${data.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-user" data-id="${data.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `,
+                    },
+                ],
+            });
+
+            // Gắn sự kiện cho các nút trong bảng
+            window.$('#userTable').on('click', '.toggle-role', function () {
+                const userId = window.$(this).data('id');
+                handleToggleRole(userId);
+            });
+
+            window.$('#userTable').on('click', '.edit-user', function () {
+                const userId = window.$(this).data('id');
+                const user = users.find((u) => u.id === userId);
+                handleEdit(user);
+            });
+
+            window.$('#userTable').on('click', '.delete-user', function () {
+                const userId = window.$(this).data('id');
+                handleDelete(userId);
+            });
+
             return () => {
                 table.destroy();
             };
@@ -40,6 +87,7 @@ const UserManagement = () => {
             });
             setUsers(response.data);
         } catch (error) {
+            showToast('Lỗi khi tải danh sách người dùng', 'error');
             console.error('Lỗi khi tải danh sách người dùng:', error);
         }
     };
@@ -59,8 +107,14 @@ const UserManagement = () => {
                     },
                 });
                 if (response.status === 200) {
-                    fetchUsers();
+                    // Cập nhật người dùng trong state
+                    setUsers((prevUsers) =>
+                        prevUsers.map((user) =>
+                            user.id === editUserId ? { ...user, ...formData } : user
+                        )
+                    );
                     handleCloseModal();
+                    showToast('Cập nhật thành công', 'success');
                 }
             } else {
                 const response = await axios.post('http://localhost:8080/admin/user/add', formData, {
@@ -69,13 +123,15 @@ const UserManagement = () => {
                     },
                 });
                 if (response.status === 201) {
-                    fetchUsers();
+                    // Thêm người dùng mới vào state
+                    setUsers((prevUsers) => [...prevUsers, response.data]);
                     handleCloseModal();
+                    showToast('Thêm người dùng thành công', 'success');
                 }
             }
         } catch (error) {
             console.error('Lỗi khi xử lý người dùng:', error);
-            alert('Có lỗi xảy ra khi xử lý. Vui lòng thử lại.');
+            showToast('Lỗi khi xử lý người dùng', 'error');
         }
     };
     const handleToggleRole = async (userId) => {
@@ -93,9 +149,10 @@ const UserManagement = () => {
                     user.id === updatedUser.id ? updatedUser : user
                 )
             );
+            showToast('Đổi quyền thành công', 'success');
         } catch (error) {
             console.error("Lỗi đổi role:", error);
-            alert(error.response?.data || "Không thể đổi quyền");
+            showToast('Lỗi khi đổi quyền người dùng', 'error');
         }
     };
 
@@ -128,10 +185,11 @@ const UserManagement = () => {
                 fetchUsers();
                 setShowDeleteModal(false);
                 setDeleteUserId(null);
+                showToast('Xóa người dùng thành công', 'success');
             }
         } catch (error) {
             console.error('Lỗi khi xóa người dùng:', error);
-            alert('Có lỗi xảy ra khi xóa người dùng. Vui lòng thử lại.');
+            showToast('Lỗi khi xóa', 'error');
         }
     };
 

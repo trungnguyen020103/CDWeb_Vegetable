@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import './OrderTable.css';
 import axios from 'axios';
+import {useToast} from "../../Toast/ToastContext";
 
 const OrderTable = () => {
     const idUser = localStorage.getItem('idUser');
@@ -8,7 +9,7 @@ const OrderTable = () => {
     const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-
+    const { showToast } = useToast();
     // State for cancel modal
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [orderToCancel, setOrderToCancel] = useState(null);
@@ -52,6 +53,7 @@ const OrderTable = () => {
             }));
             setOrders(mappedOrders);
         } catch (error) {
+            showToast('Lỗi khi tải danh sách đơn hàng', 'error');
             console.error('Lỗi khi lấy đơn hàng:', error);
             setError('Không thể tải đơn hàng. Vui lòng thử lại.');
         } finally {
@@ -146,9 +148,10 @@ const OrderTable = () => {
                         order.id === orderToCancel ? {...order, status: 'Đã hủy'} : order,
                     ),
                 );
+                showToast('Hủy đơn hàng thành công', 'success');
             } catch (error) {
                 console.error('Lỗi khi hủy đơn hàng:', error);
-                alert('Không thể hủy đơn hàng. Vui lòng thử lại.');
+                showToast('Lỗi khi hủy đơn hàng', 'error');
             }
         }
         setShowCancelModal(false);
@@ -205,11 +208,11 @@ const OrderTable = () => {
                     headers: {Authorization: `Bearer ${token}`},
                 },
             );
-            alert('Đánh giá sản phẩm thành công!');
+            showToast('Đánh giá sản phẩm thành công!', 'success');
             closeReviewModal();
         } catch (error) {
             console.error('Lỗi khi gửi đánh giá:', error);
-            alert('Không thể gửi đánh giá. Vui lòng thử lại.');
+            showToast('Không thể gửi đánh giá', 'error');
         }
     };
 

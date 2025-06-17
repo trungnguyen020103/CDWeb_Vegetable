@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useToast } from "../../../Toast/ToastContext";
 
 const CategoryManagement = () => {
     const [categories, setCategories] = useState([]);
@@ -13,14 +14,61 @@ const CategoryManagement = () => {
     const [editCategoryId, setEditCategoryId] = useState(null);
     const [deleteCategoryId, setDeleteCategoryId] = useState(null);
     const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
     const token = localStorage.getItem('accessToken');
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        if (categories.length > 0 && window.$) {
+            const table = window.$('#categoryTable').DataTable({
+                destroy: true, // Ensure table is reinitialized on data change
+                data: categories,
+                columns: [
+                    { data: 'id' },
+                    { data: 'name' },
+                    {
+                        data: 'description',
+                        render: (data) => data || '-'
+                    },
+                    {
+                        data: null,
+                        render: (data) => `
+                            <button class="btn btn-sm btn-warning me-2 edit-category" data-id="${data.id}" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-category" data-id="${data.id}" title="Delete">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        `,
+                    },
+                ],
+                pageLength: 5, // Default items per page
+                language: {
+                    search: "Search by name or description:",
+                    searchPlaceholder: "Enter term..."
+                }
+            });
+
+            // Attach event listeners for edit and delete buttons
+            window.$('#categoryTable').on('click', '.edit-category', function () {
+                const categoryId = window.$(this).data('id');
+                const category = categories.find((c) => c.id === categoryId);
+                handleEdit(category);
+            });
+
+            window.$('#categoryTable').on('click', '.delete-category', function () {
+                const categoryId = window.$(this).data('id');
+                handleDelete(categoryId);
+            });
+
+            return () => {
+                table.destroy();
+            };
+        }
+    }, [categories]);
 
     const fetchCategories = async () => {
         try {
@@ -43,11 +91,6 @@ const CategoryManagement = () => {
         setError(null);
     };
 
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1); // Reset to first page on search
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -58,7 +101,12 @@ const CategoryManagement = () => {
                     },
                 });
                 if (response.status === 200) {
-                    await fetchCategories();
+                    setCategories((prevCategories) =>
+                        prevCategories.map((category) =>
+                            category.id === editCategoryId ? { ...category, ...formData } : category
+                        )
+                    );
+                    showToast('Cập nhật thành công', 'success');
                     handleCloseModal();
                 }
             } else {
@@ -68,7 +116,8 @@ const CategoryManagement = () => {
                     },
                 });
                 if (response.status === 201) {
-                    await fetchCategories();
+                    setCategories((prevCategories) => [...prevCategories, response.data]);
+                    showToast('Thêm danh mục thành công', 'success');
                     handleCloseModal();
                 }
             }
@@ -76,6 +125,7 @@ const CategoryManagement = () => {
         } catch (error) {
             console.error('Error processing category:', error);
             setError(error.response?.data?.message || 'An error occurred while processing the category. Please try again.');
+            showToast('Lỗi khi xử lý danh mục', 'error');
         }
     };
 
@@ -104,12 +154,16 @@ const CategoryManagement = () => {
                 },
             });
             if (response.status === 200) {
-                await fetchCategories();
+                setCategories((prevCategories) =>
+                    prevCategories.filter((category) => category.id !== deleteCategoryId)
+                );
+                showToast('Xóa thành công', 'success');
                 setShowDeleteModal(false);
                 setDeleteCategoryId(null);
                 setError(null);
             }
         } catch (error) {
+            showToast('Lỗi khi xóa', 'error');
             console.error('Error deleting category:', error);
             setError(error.response?.data?.message || 'An error occurred while deleting the category. Please try again.');
         }
@@ -132,38 +186,13 @@ const CategoryManagement = () => {
         setError(null);
     };
 
-    // Filter categories based on search term
-    const filteredCategories = categories.filter(
-        (category) =>
-            category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    // Pagination logic
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredCategories.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="mb-0">Category Management</h2>
-                <div className="d-flex align-items-center">
-                    <input
-                        type="text"
-                        className="form-control me-2"
-                        style={{ maxWidth: '200px' }}
-                        placeholder="Search by name or description"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                    />
-                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                        <i className="fas fa-plus me-1"></i> Add Category
-                    </button>
-                </div>
+                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                    <i className="fas fa-plus me-1"></i> Add Category
+                </button>
             </div>
             {error && (
                 <div className="alert alert-danger" role="alert">
@@ -173,7 +202,7 @@ const CategoryManagement = () => {
             <div className="card shadow-sm">
                 <div className="card-body">
                     <div className="table-responsive">
-                        <table className="table table-bordered table-hover">
+                        <table id="categoryTable" className="table table-bordered table-hover">
                             <thead className="table-light">
                             <tr>
                                 <th>ID</th>
@@ -182,49 +211,9 @@ const CategoryManagement = () => {
                                 <th>Action</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            {currentItems.map((category) => (
-                                <tr key={category.id}>
-                                    <td>{category.id}</td>
-                                    <td>{category.name}</td>
-                                    <td>{category.description || '-'}</td>
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-warning me-2"
-                                            title="Edit"
-                                            onClick={() => handleEdit(category)}
-                                        >
-                                            <i className="fas fa-edit"></i>
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-danger"
-                                            title="Delete"
-                                            onClick={() => handleDelete(category.id)}
-                                        >
-                                            <i className="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
-                    {/* Pagination */}
-                    <nav aria-label="Page navigation">
-                        <ul className="pagination justify-content-end mt-3">
-                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                <button className="page-link" onClick={() => paginate(currentPage - 1)}>Previous</button>
-                            </li>
-                            {Array.from({ length: totalPages }, (_, i) => (
-                                <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                                    <button className="page-link" onClick={() => paginate(i + 1)}>{i + 1}</button>
-                                </li>
-                            ))}
-                            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                <button className="page-link" onClick={() => paginate(currentPage + 1)}>Next</button>
-                            </li>
-                        </ul>
-                    </nav>
                 </div>
             </div>
 
