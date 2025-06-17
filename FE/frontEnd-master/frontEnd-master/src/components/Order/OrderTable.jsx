@@ -1,24 +1,21 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './OrderTable.css';
 import axios from 'axios';
-import {useToast} from "../../Toast/ToastContext";
+import { useToast } from "../../Toast/ToastContext";
+import { useTranslation } from 'react-i18next';
 
 const OrderTable = () => {
+    const { t } = useTranslation();
     const idUser = localStorage.getItem('idUser');
     const token = localStorage.getItem('accessToken');
     const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const { showToast } = useToast();
-    // State for cancel modal
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [orderToCancel, setOrderToCancel] = useState(null);
-
-    // State for details modal
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
-
-    // State for review modal
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewData, setReviewData] = useState({
         productId: null,
@@ -28,7 +25,8 @@ const OrderTable = () => {
 
     const fetchOrders = useCallback(async () => {
         if (!idUser || !token) {
-            setError('Vui lòng đăng nhập để xem đơn hàng.');
+            setError(t('please_login'));
+            showToast(t('please_login'), 'error');
             return;
         }
 
@@ -36,12 +34,12 @@ const OrderTable = () => {
         setError(null);
         try {
             const response = await axios.get(`http://localhost:8080/api/order/get/user/${idUser}`, {
-                headers: {Authorization: `Bearer ${token}`},
+                headers: { Authorization: `Bearer ${token}` },
             });
             const mappedOrders = response.data.map((order) => ({
                 id: order.id,
                 orderDate: order.orderdate,
-                productName: order.orderDetails?.[0]?.product?.name || 'Sản phẩm không xác định',
+                productName: order.orderDetails?.[0]?.product?.name || t('undefined_product'),
                 quantity: order.orderDetails?.reduce((sum, detail) => sum + detail.quantity, 0) || 1,
                 price: order.orderDetails?.[0]?.unitprice || order.total,
                 status: getStatusText(Number(order.status)),
@@ -53,13 +51,13 @@ const OrderTable = () => {
             }));
             setOrders(mappedOrders);
         } catch (error) {
-            showToast('Lỗi khi tải danh sách đơn hàng', 'error');
-            console.error('Lỗi khi lấy đơn hàng:', error);
-            setError('Không thể tải đơn hàng. Vui lòng thử lại.');
+            showToast(t('error_loading'), 'error');
+            console.error('Error fetching orders:', error);
+            setError(t('error_loading'));
         } finally {
             setIsLoading(false);
         }
-    }, [idUser, token]);
+    }, [idUser, token, t, showToast]);
 
     useEffect(() => {
         fetchOrders();
@@ -79,15 +77,15 @@ const OrderTable = () => {
 
     const getStatusBadgeClass = (status) => {
         switch (status) {
-            case 'Đang xử lý':
+            case t('status_processing'):
                 return 'badge-warning';
-            case 'Đang chuẩn bị giao':
+            case t('status_preparing'):
                 return 'badge-info';
-            case 'Đang giao':
+            case t('status_shipping'):
                 return 'badge-info';
-            case 'Đã giao':
+            case t('status_delivered'):
                 return 'badge-success';
-            case 'Đã hủy':
+            case t('status_canceled'):
                 return 'badge-danger';
             default:
                 return 'badge-secondary';
@@ -96,15 +94,15 @@ const OrderTable = () => {
 
     const getStatusIcon = (status) => {
         switch (status) {
-            case 'Đang xử lý':
+            case t('status_processing'):
                 return 'fa-clock-o';
-            case 'Đang chuẩn bị giao':
+            case t('status_preparing'):
                 return 'fa-hourglass-start';
-            case 'Đang giao':
+            case t('status_shipping'):
                 return 'fa-truck';
-            case 'Đã giao':
+            case t('status_delivered'):
                 return 'fa-check-circle';
-            case 'Đã hủy':
+            case t('status_canceled'):
                 return 'fa-times-circle';
             default:
                 return 'fa-question-circle';
@@ -114,17 +112,17 @@ const OrderTable = () => {
     const getStatusText = (status) => {
         switch (Number(status)) {
             case 0:
-                return 'Đang xử lý';
+                return t('status_processing');
             case 1:
-                return 'Đang chuẩn bị giao';
+                return t('status_preparing');
             case 2:
-                return 'Đang giao';
+                return t('status_shipping');
             case 3:
-                return 'Đã giao';
+                return t('status_delivered');
             case 4:
-                return 'Đã hủy';
+                return t('status_canceled');
             default:
-                return 'Không xác định';
+                return t('status_unknown');
         }
     };
 
@@ -140,18 +138,18 @@ const OrderTable = () => {
                     `http://localhost:8080/api/order/update/${orderToCancel}?status=4`,
                     {},
                     {
-                        headers: {Authorization: `Bearer ${token}`},
-                    },
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
                 );
                 setOrders(
                     orders.map((order) =>
-                        order.id === orderToCancel ? {...order, status: 'Đã hủy'} : order,
-                    ),
+                        order.id === orderToCancel ? { ...order, status: t('status_canceled') } : order
+                    )
                 );
-                showToast('Hủy đơn hàng thành công', 'success');
+                showToast(t('cancel_order_success'), 'success');
             } catch (error) {
-                console.error('Lỗi khi hủy đơn hàng:', error);
-                showToast('Lỗi khi hủy đơn hàng', 'error');
+                console.error('Error canceling order:', error);
+                showToast(t('cancel_order_failed'), 'error');
             }
         }
         setShowCancelModal(false);
@@ -199,26 +197,26 @@ const OrderTable = () => {
                 userId: parseInt(idUser),
                 rating: parseInt(reviewData.rating),
                 comment: reviewData.comment,
-                date: new Date().toISOString(), // Gửi thời gian hiện tại
+                date: new Date().toISOString(),
             };
             await axios.post(
                 'http://localhost:8080/user/review/create',
                 reviewDto,
                 {
-                    headers: {Authorization: `Bearer ${token}`},
-                },
+                    headers: { Authorization: `Bearer ${token}` },
+                }
             );
-            showToast('Đánh giá sản phẩm thành công!', 'success');
+            showToast(t('review_success'), 'success');
             closeReviewModal();
         } catch (error) {
-            console.error('Lỗi khi gửi đánh giá:', error);
-            showToast('Không thể gửi đánh giá', 'error');
+            console.error('Error submitting review:', error);
+            showToast(t('review_failed'), 'error');
         }
     };
 
     const handleReviewInputChange = (e) => {
-        const {name, value} = e.target;
-        setReviewData((prev) => ({...prev, [name]: value}));
+        const { name, value } = e.target;
+        setReviewData((prev) => ({ ...prev, [name]: value }));
     };
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -237,14 +235,14 @@ const OrderTable = () => {
                 <div className="card-header">
                     <h3 className="card-title">
                         <i className="fa fa-list-alt mr-3"></i>
-                        Lịch Sử Đơn Hàng
+                        {t('order_history')}
                     </h3>
                     <div className="card-actions">
                         <button className="btn btn-outline-light btn-sm" onClick={fetchOrders}>
-                            <i className="fa fa-refresh mr-1"></i>Làm mới
+                            <i className="fa fa-refresh mr-1"></i>{t('refresh')}
                         </button>
                         <button className="btn btn-outline-light btn-sm">
-                            <i className="fa fa-filter mr-1"></i>Lọc
+                            <i className="fa fa-filter mr-1"></i>{t('filter')}
                         </button>
                     </div>
                 </div>
@@ -253,21 +251,21 @@ const OrderTable = () => {
                     <table className="table custom-table">
                         <thead>
                         <tr>
-                            <th>Mã ĐH</th>
-                            <th>Ngày Đặt</th>
-                            <th>Địa chỉ</th>
-                            <th>Ghi chú</th>
-                            <th>Phương thức thanh toán</th>
-                            <th>Tổng Tiền</th>
-                            <th>Trạng Thái</th>
-                            <th>Thao Tác</th>
+                            <th>{t('order_id')}</th>
+                            <th>{t('order_date')}</th>
+                            <th>{t('shipping_address')}</th>
+                            <th>{t('note')}</th>
+                            <th>{t('payment_method')}</th>
+                            <th>{t('total')}</th>
+                            <th>{t('status')}</th>
+                            <th>{t('action')}</th>
                         </tr>
                         </thead>
                         <tbody>
                         {isLoading ? (
                             <tr>
                                 <td colSpan="8" className="text-center">
-                                    Đang tải...
+                                    {t('loading')}
                                 </td>
                             </tr>
                         ) : error ? (
@@ -279,7 +277,7 @@ const OrderTable = () => {
                         ) : currentOrders.length === 0 ? (
                             <tr>
                                 <td colSpan="8" className="text-center">
-                                    Bạn chưa có đơn hàng nào.
+                                    {t('no_orders')}
                                 </td>
                             </tr>
                         ) : (
@@ -306,30 +304,29 @@ const OrderTable = () => {
                                         <span className="total-text">{formatCurrency(order.total)}</span>
                                     </td>
                                     <td>
-                                            <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                                                <i className={`fa ${getStatusIcon(order.status)} mr-1`}></i>
-                                                {order.status}
-                                            </span>
+                                        <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                                            <i className={`fa ${getStatusIcon(order.status)} mr-1`}></i>
+                                            {order.status}
+                                        </span>
                                     </td>
                                     <td>
                                         <div className="action-buttons">
                                             <button
                                                 className="btn btn-sm btn-outline-info mr-1"
-                                                title="Xem chi tiết"
+                                                title={t('view_details')}
                                                 onClick={() => handleViewDetails(order)}
                                             >
                                                 <i className="fa fa-eye"></i>
                                             </button>
-                                            {order.status === 'Đang xử lý' && (
+                                            {order.status === t('status_processing') && (
                                                 <button
                                                     className="btn btn-sm btn-outline-danger mr-1"
-                                                    title="Hủy đơn hàng"
+                                                    title={t('cancel_order')}
                                                     onClick={() => handleCancelOrder(order.id)}
                                                 >
                                                     <i className="fa fa-times"></i>
                                                 </button>
                                             )}
-
                                         </div>
                                     </td>
                                 </tr>
@@ -343,7 +340,7 @@ const OrderTable = () => {
                     <ul className="pagination">
                         <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                             <button onClick={() => paginate(currentPage - 1)} className="page-link">
-                                Previous
+                                {t('previous')}
                             </button>
                         </li>
                         {[...Array(totalPages)].map((_, i) => (
@@ -358,7 +355,7 @@ const OrderTable = () => {
                         ))}
                         <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                             <button onClick={() => paginate(currentPage + 1)} className="page-link">
-                                Next
+                                {t('next')}
                             </button>
                         </li>
                     </ul>
@@ -367,184 +364,181 @@ const OrderTable = () => {
                 <div className="order-footer">
                     <div className="footer-actions">
                         <button className="btn btn-primary btn-sm">
-                            <i className="fa fa-plus mr-1"></i>Đặt Hàng Mới
+                            <i className="fa fa-plus mr-1"></i>{t('new_order')}
                         </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Cancel Modal */}
-            {showCancelModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5>Cảnh Báo</h5>
-                            <button className="modal-close-btn" onClick={closeCancelModal}>
-                                <i className="fa fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <p>Bạn có chắc chắn muốn hủy đơn hàng này?</p>
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary btn-sm" onClick={closeCancelModal}>
-                                Hủy
-                            </button>
-                            <button className="btn btn-danger btn-sm" onClick={confirmCancelOrder}>
-                                Xác Nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Details Modal */}
-            {showDetailsModal && selectedOrder && (
-                <div className="modal-overlay">
-                    <div className="modal-content modal-details-content">
-                        <div className="modal-header">
-                            <h5>Chi Tiết Đơn Hàng Số {selectedOrder.id}</h5>
-                            <button className="modal-close-btn" onClick={closeDetailsModal}>
-                                <i className="fa fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <h6>Danh Sách Sản Phẩm</h6>
-                            <div className="table-responsive">
-                                <table className="table custom-table">
-                                    <thead>
-                                    <tr>
-                                        <th>Sản phẩm</th>
-                                        <th>Hình ảnh</th>
-                                        <th>Số lượng</th>
-                                        <th>Đơn giá</th>
-                                        <th>Tổng</th>
-                                        <th>Thao tác</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {selectedOrder.orderDetails.length > 0 ? (
-                                        selectedOrder.orderDetails.map((detail) => (
-                                            <tr key={detail.id}>
-                                                <td>{detail.product?.name || 'Sản phẩm không xác định'}</td>
-                                                <td>
-                                                    <img
-                                                        src={
-                                                            detail.product?.imageUrl ||
-                                                            'https://via.placeholder.com/50'
-                                                        }
-                                                        alt={detail.product?.name || 'Sản phẩm'}
-                                                        style={{
-                                                            width: '50px',
-                                                            height: '50px',
-                                                            objectFit: 'cover',
-                                                        }}
-                                                    />
-                                                </td>
-                                                <td>{detail.quantity}</td>
-                                                <td>{formatCurrency(detail.unitprice)}</td>
-                                                <td>{formatCurrency(detail.total)}</td>
-                                                <td>
-                                                    <a href={`/product/${detail.product?.id}`}>
-                                                        <button
-                                                            className="btn btn-sm btn-outline-info mr-1"
-                                                            title="Xem sản phẩm"
-                                                        >
-                                                            <i className="fa fa-eye"></i>
-                                                        </button>
-                                                    </a>
-                                                    {selectedOrder.status === 'Đã giao' && (
-                                                        <button
-                                                            className="btn btn-sm btn-outline-success"
-                                                            title="Đánh giá sản phẩm"
-                                                            onClick={() => handleReviewProduct(detail.product?.id)}
-                                                        >
-                                                            <i className="fa fa-star"></i>
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="6" className="text-center">
-                                                Không có sản phẩm chi tiết
-                                            </td>
-                                        </tr>
-                                    )}
-                                    </tbody>
-                                </table>
+                {showCancelModal && (
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5>{t('warning')}</h5>
+                                <button className="modal-close-btn" onClick={closeCancelModal}>
+                                    <i className="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <p>{t('confirm_cancel')}</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-secondary btn-sm" onClick={closeCancelModal}>
+                                    {t('cancel')}
+                                </button>
+                                <button className="btn btn-danger btn-sm" onClick={confirmCancelOrder}>
+                                    {t('confirm')}
+                                </button>
                             </div>
                         </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary btn-sm" onClick={closeDetailsModal}>
-                                Đóng
-                            </button>
+                    </div>
+                )}
+
+                {showDetailsModal && selectedOrder && (
+                    <div className="modal-overlay">
+                        <div className="modal-content modal-details-content">
+                            <div className="modal-header">
+                                <h5>{t('order_details')} {selectedOrder.id}</h5>
+                                <button className="modal-close-btn" onClick={closeDetailsModal}>
+                                    <i className="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <h6>{t('product_list')}</h6>
+                                <div className="table-responsive">
+                                    <table className="table custom-table">
+                                        <thead>
+                                        <tr>
+                                            <th>{t('product')}</th>
+                                            <th>{t('image')}</th>
+                                            <th>{t('quantity')}</th>
+                                            <th>{t('unit_price')}</th>
+                                            <th>{t('total')}</th>
+                                            <th>{t('action')}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {selectedOrder.orderDetails.length > 0 ? (
+                                            selectedOrder.orderDetails.map((detail) => (
+                                                <tr key={detail.id}>
+                                                    <td>{detail.product?.name || t('undefined_product')}</td>
+                                                    <td>
+                                                        <img
+                                                            src={
+                                                                detail.product?.imageUrl ||
+                                                                'https://via.placeholder.com/50'
+                                                            }
+                                                            alt={detail.product?.name || t('product')}
+                                                            style={{
+                                                                width: '50px',
+                                                                height: '50px',
+                                                                objectFit: 'cover',
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td>{detail.quantity}</td>
+                                                    <td>{formatCurrency(detail.unitprice)}</td>
+                                                    <td>{formatCurrency(detail.quantity * detail.unitprice)}</td>
+                                                    <td>
+                                                        <a href={`/product/${detail.product?.id}`}>
+                                                            <button
+                                                                className="btn btn-sm btn-outline-info mr-1"
+                                                                title={t('view_product')}
+                                                            >
+                                                                <i className="fa fa-eye"></i>
+                                                            </button>
+                                                        </a>
+                                                        {selectedOrder.status === t('status_delivered') && (
+                                                            <button
+                                                                className="btn btn-sm btn-outline-success"
+                                                                title={t('review_product')}
+                                                                onClick={() => handleReviewProduct(detail.product?.id)}
+                                                            >
+                                                                <i className="fa fa-star"></i>
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="6" className="text-center">
+                                                    {t('no_order_details')}
+                                                </td>
+                                            </tr>
+                                        )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-secondary btn-sm" onClick={closeDetailsModal}>
+                                    {t('close')}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Review Modal */}
-            {showReviewModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5>Đánh Giá Sản Phẩm</h5>
-                            <button className="modal-close-btn" onClick={closeReviewModal}>
-                                <i className="fa fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <form onSubmit={handleReviewSubmit}>
-                                <div className="form-group">
-                                    <label htmlFor="rating">Điểm đánh giá</label>
-                                    <div className="star-rating">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <span
-                                                key={star}
-                                                onClick={() => setReviewData({...reviewData, rating: star})}
-                                                style={{
-                                                    cursor: 'pointer',
-                                                    fontSize: '1.5rem',
-                                                    color: star <= reviewData.rating ? '#ffc107' : '#e4e5e9',
-                                                }}
-                                            >
-                ★
-            </span>
-                                        ))}
+                {showReviewModal && (
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5>{t('review_product')}</h5>
+                                <button className="modal-close-btn" onClick={closeReviewModal}>
+                                    <i className="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <form onSubmit={handleReviewSubmit}>
+                                    <div className="form-group">
+                                        <label htmlFor="rating">{t('rating')}</label>
+                                        <div className="star-rating">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <span
+                                                    key={star}
+                                                    onClick={() => setReviewData({ ...reviewData, rating: star })}
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        fontSize: '1.5rem',
+                                                        color: star <= reviewData.rating ? '#ffc107' : '#e4e5e9',
+                                                    }}
+                                                >
+                                                    ★
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="form-group">
-                                    <label htmlFor="comment">Nhận xét</label>
-                                    <textarea
-                                        id="comment"
-                                        name="comment"
-                                        value={reviewData.comment}
-                                        onChange={handleReviewInputChange}
-                                        className="form-control"
-                                        rows="4"
-                                        placeholder="Nhập nhận xét của bạn..."
-                                    ></textarea>
-                                </div>
-                                <div className="modal-footer">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary btn-sm"
-                                        onClick={closeReviewModal}
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button type="submit" className="btn btn-primary btn-sm">
-                                        Gửi đánh giá
-                                    </button>
-                                </div>
-                            </form>
+                                    <div className="form-group">
+                                        <label htmlFor="comment">{t('comment')}</label>
+                                        <textarea
+                                            id="comment"
+                                            name="comment"
+                                            value={reviewData.comment}
+                                            onChange={handleReviewInputChange}
+                                            className="form-control"
+                                            rows="4"
+                                            placeholder={t('write_comment')}
+                                        ></textarea>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-sm"
+                                            onClick={closeReviewModal}
+                                        >
+                                            {t('cancel')}
+                                        </button>
+                                        <button type="submit" className="btn btn-primary btn-sm">
+                                            {t('submit_review')}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

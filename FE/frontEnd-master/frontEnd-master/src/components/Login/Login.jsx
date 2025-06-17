@@ -3,7 +3,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import axios from '../../axiosConfig'; // Use custom axios
+import axios from '../../axiosConfig';
 import './Login.css';
 import { useToast } from '../../Toast/ToastContext';
 
@@ -16,9 +16,9 @@ const Login = () => {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const { showToast } = useToast();
-const [role, setRole] = useState('');
-const [user, setUser] = useState({});
-    // Validate email
+    const [role, setRole] = useState('');
+    const [user, setUser] = useState({});
+
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email) {
@@ -33,7 +33,6 @@ const [user, setUser] = useState({});
         }
     };
 
-    // Validate password
     const validatePassword = (password) => {
         if (!password) {
             setPasswordError(t('password_notblank'));
@@ -87,18 +86,15 @@ const [user, setUser] = useState({});
 
             const { accessToken, refreshToken, expiration, tokenType, idUser } = response.data;
 
-            // Lưu thông tin token
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('tokenType', tokenType);
             localStorage.setItem('idUser', idUser);
             localStorage.setItem('tokenExpiration', Date.now() + expiration);
 
-            // Lấy token và idUser để gọi API
             const token = localStorage.getItem("accessToken");
             const userId = localStorage.getItem("idUser");
 
-            // Gọi API lấy thông tin user
             const userRes = await axios.get(`http://localhost:8080/user/getbyid/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -108,13 +104,12 @@ const [user, setUser] = useState({});
             const user = userRes.data;
             const role = user.role;
 
-            // Lưu vào localStorage
             localStorage.setItem("user", JSON.stringify(user));
             localStorage.setItem("role", role);
 
             console.log("Lấy thông tin user thành công:", user);
 
-            showToast('Đăng nhập thành công', 'success');
+            showToast(t('login_success'), 'success');
             navigate('/profile');
         } catch (error) {
             showToast(t('login_failed'), 'error');
@@ -126,7 +121,6 @@ const [user, setUser] = useState({});
             }
         }
     };
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -209,7 +203,7 @@ const [user, setUser] = useState({});
 
                             <div className="d-flex justify-content-end mb-4">
                                 <a href="/forgotPassword" className="forgot-password">
-                                    {t('Quên mật khẩu')}
+                                    {t('forgot_password')}
                                 </a>
                             </div>
 
@@ -246,7 +240,7 @@ const [user, setUser] = useState({});
 
                         <div className="register-link">
                             <p>
-                                {t('Chưa có tài khoản?')} <a href="/register">{t('Đăng ký ngay')}</a>
+                                {t('no_account')} <a href="/register">{t('register_now')}</a>
                             </p>
                         </div>
                     </div>

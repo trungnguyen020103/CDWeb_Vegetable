@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loadCart, removeFromCart, updateQuantity } from '../../store/Actions';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../Toast/ToastContext';
 import { useNavigate } from 'react-router-dom';
 
 const ShoppingCart = () => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ const ShoppingCart = () => {
                 const fetchedProducts = await Promise.all(productPromises);
                 setProducts(fetchedProducts);
             } catch (err) {
-                setError(err.message);
+                setError(t('error_loading'));
             } finally {
                 setLoading(false);
             }
@@ -46,11 +48,11 @@ const ShoppingCart = () => {
         } else {
             setProducts([]);
         }
-    }, [dispatch, cart]);
+    }, [dispatch, cart, t]);
 
     const handleRemoveFromCart = (productId) => {
         dispatch(removeFromCart(productId));
-        showToast('Xóa thành công sản phẩm', 'success');
+        showToast(t('remove_from_cart_success'), 'success');
     };
 
     const handleQuantityChange = (productId, newQuantity) => {
@@ -64,25 +66,21 @@ const ShoppingCart = () => {
 
     const handleCheckout = () => {
         if (selectedIds.length === 0) {
-            showToast('Vui lòng chọn ít nhất 1 sản phẩm!', 'error');
+            showToast(t('select_at_least_one_product'), 'error');
             return;
         }
 
-        // Lọc danh sách sản phẩm được chọn
         const selectedProducts = products.filter((product) => selectedIds.includes(product.id));
-
-        // Truyền danh sách sản phẩm được chọn qua navigate
         navigate('/payment', { state: { selectedProducts } });
     };
 
     return (
         <div>
-            {/* Giữ nguyên phần header cart */}
             <div className="wrap-header-cart js-panel-cart">
                 <div className="s-full js-hide-cart"></div>
                 <div className="header-cart flex-col-l p-l-65 p-r-25">
                     <div className="header-cart-title flex-w flex-sb-m p-b-8">
-                        <span className="mtext-103 cl2">Your Cart</span>
+                        <span className="mtext-103 cl2">{t('your_cart')}</span>
                         <div className="fs-35 lh-10 cl2 p-lr-5 pointer hov-cl1 trans-04 js-hide-cart">
                             <i className="zmdi zmdi-close"></i>
                         </div>
@@ -102,32 +100,31 @@ const ShoppingCart = () => {
                                             {product.name}
                                         </a>
                                         <span className="header-cart-item-info">
-                      {product.quantity} x {product.price.toLocaleString()} VNĐ
-                    </span>
+                                            {product.quantity} x {product.price.toLocaleString()} VNĐ
+                                        </span>
                                     </div>
                                 </li>
                             ))}
                         </ul>
                         <div className="w-full">
                             <div className="header-cart-total w-full p-tb-40">
-                                Total:{' '}
+                                {t('cart_total')}: {' '}
                                 {products
                                     .reduce((total, product) => total + product.price * product.quantity, 0)
-                                    .toLocaleString()}{' '}
-                                VNĐ
+                                    .toLocaleString()} VNĐ
                             </div>
                             <div className="header-cart-buttons flex-w w-full">
                                 <a
                                     href="/shoping-cart"
                                     className="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-r-8 m-b-10"
                                 >
-                                    View Cart
+                                    {t('view_cart')}
                                 </a>
                                 <a
                                     href="/shoping-cart"
                                     className="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-b-10"
                                 >
-                                    Check Out
+                                    {t('checkout')}
                                 </a>
                             </div>
                         </div>
@@ -137,11 +134,11 @@ const ShoppingCart = () => {
 
             <div className="container">
                 <div className="bread-crumb flex-w p-l-25 p-r-15 p-t-30 p-lr-0-lg">
-                    <a href="index.html" className="stext-109 cl8 hov-cl1 trans-04">
-                        Trang Chủ
+                    <a href="/home" className="stext-109 cl8 hov-cl1 trans-04">
+                        {t('home_breadcrumb')}
                         <i className="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
                     </a>
-                    <span className="stext-109 cl4">Giỏ Hàng</span>
+                    <span className="stext-109 cl4">{t('cart')}</span>
                 </div>
             </div>
 
@@ -154,31 +151,37 @@ const ShoppingCart = () => {
                                     <table className="table-shopping-cart">
                                         <thead>
                                         <tr className="table_head">
-                                            <th className="column-1">Sản phẩm</th>
-                                            <th className="column-2"></th>
+                                            <th className="column-1">{t('product_column')}</th>
+                                            <th className="column-2">{t('name_column')}</th>
                                             <th></th>
                                             <th></th>
-                                            <th className="column-3">Giá</th>
-                                            <th className="column-4">Số Lượng</th>
-                                            <th className="column-5">Tổng Tiền</th>
-                                            <th className="column-5">Hành Động</th>
-                                            <th className="column-5">Chọn</th>
+                                            <th className="column-3">{t('price_column')}</th>
+                                            <th className="column-4">{t('quantity_column')}</th>
+                                            <th className="column-5">{t('total_column')}</th>
+                                            <th className="column-5">{t('actions_column')}</th>
+                                            <th className="column-5">{t('select')}</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         {loading && (
                                             <tr>
-                                                <td colSpan="8">Loading...</td>
+                                                <td colSpan="9" className="text-center">
+                                                    {t('loading')}
+                                                </td>
                                             </tr>
                                         )}
                                         {error && (
                                             <tr>
-                                                <td colSpan="8">Error: {error}</td>
+                                                <td colSpan="9" className="text-center">
+                                                    {error}
+                                                </td>
                                             </tr>
                                         )}
                                         {!loading && !error && products.length === 0 && (
                                             <tr>
-                                                <td colSpan="8">Your cart is empty</td>
+                                                <td colSpan="9" className="text-center">
+                                                    {t('cart_empty')}
+                                                </td>
                                             </tr>
                                         )}
                                         {products.map((product) => (
@@ -234,7 +237,7 @@ const ShoppingCart = () => {
                                                         type="button"
                                                         className="btn btn-success"
                                                     >
-                                                        Xóa
+                                                        {t('remove')}
                                                     </button>
                                                 </td>
                                                 <td>
@@ -243,6 +246,7 @@ const ShoppingCart = () => {
                                                             type="checkbox"
                                                             checked={selectedIds.includes(product.id)}
                                                             onChange={() => handleCheckboxChange(product.id)}
+                                                            aria-label={t('select_product', { name: product.name })}
                                                         />
                                                     </div>
                                                 </td>
@@ -254,7 +258,15 @@ const ShoppingCart = () => {
 
                                 <div className="flex-w flex-sb-m bor15 p-t-18 p-b-15 p-lr-40 p-lr-15-sm">
                                     <div className="flex-w flex-m m-r-20 m-tb-5">
-                                        {/* Coupon input */}
+                                        <input
+                                            className="stext-104 cl2 plh4 size-117 bor13 p-lr-20 m-r-10 m-tb-5"
+                                            type="text"
+                                            name="coupon"
+                                            placeholder={t('coupon_placeholder')}
+                                        />
+                                        <div className="flex-c-m stext-101 cl2 size-118 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-5">
+                                            {t('apply_coupon')}
+                                        </div>
                                     </div>
                                     <div className="flex-c-m stext-101 cl2 size-119 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-10">
                                         <button
@@ -262,7 +274,7 @@ const ShoppingCart = () => {
                                             onClick={handleCheckout}
                                             className="flex-c-m stext-101 cl2 size-119 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer m-tb-10"
                                         >
-                                            Thanh Toán
+                                            {t('checkout')}
                                         </button>
                                     </div>
                                 </div>
@@ -273,9 +285,9 @@ const ShoppingCart = () => {
             </form>
 
             <div className="btn-back-to-top" id="myBtn">
-        <span className="symbol-btn-back-to-top">
-          <i className="zmdi zmdi-chevron-up"></i>
-        </span>
+                <span className="symbol-btn-back-to-top">
+                    <i className="zmdi zmdi-chevron-up"></i>
+                </span>
             </div>
         </div>
     );
