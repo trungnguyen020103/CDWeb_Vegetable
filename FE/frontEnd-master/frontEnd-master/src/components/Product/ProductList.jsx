@@ -112,7 +112,7 @@ const ProductList = () => {
     const debouncedSearch = debounce((value) => {
         setSearchQuery(value);
         setCurrentPage(1);
-    }, 300);
+    }, 50);
 
     const handleSearch = (e) => {
         debouncedSearch(e.target.value);

@@ -33,7 +33,6 @@ public class EmailServiceImpl implements EmailService {
             details.setMsgBody(generateRandomHash());
             SimpleMailMessage mailMessage
                     = new SimpleMailMessage();
-
             mailMessage.setFrom(sender);
             mailMessage.setTo(details.getRecipient());
             mailMessage.setText("Mã của bạn là: " + details.getMsgBody());
