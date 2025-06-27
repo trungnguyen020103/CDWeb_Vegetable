@@ -141,7 +141,8 @@ const Profile = () => {
         localStorage.removeItem('tokenType');
         localStorage.removeItem('idUser');
         localStorage.removeItem('tokenExpiration');
-
+        localStorage.removeItem('role');
+        localStorage.removeItem('user');
         if (window.google?.accounts?.id) {
             window.google.accounts.id.disableAutoSelect();
         }

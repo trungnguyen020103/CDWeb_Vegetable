@@ -118,7 +118,7 @@ export default function ProductDetail() {
                 }
             );
             setNewComment('');
-            showToast(response.data.message || t('comment_pending'), 'success');
+            showToast('Thành công, vui lòng đợi duyệt', 'success');
         } catch (err) {
             const errorMessage =
                 err.response?.data && typeof err.response.data === 'object'
